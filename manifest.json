@@ -1,0 +1,25 @@
+{
+  "manifest_version": 2,
+  "name": "Modern Home Tab",
+  "version": "1.0",
+  "description": "A beautiful and modern new tab experience with customizable themes and productivity features.",
+  "icons": {
+    "48": "icons/icon.svg",
+    "128": "icons/icon.svg"
+  },
+  "browser_action": {
+    "default_popup": "index.html",
+    "default_icon": "icons/icon.svg"
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "background": {
+    "persistent": false,
+    "scripts": ["scripts.js"]
+  }
+}

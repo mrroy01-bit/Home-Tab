@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background Circle with Gradient -->
+    <circle cx="64" cy="64" r="60" fill="url(#gradient)"/>
+    
+    <!-- Home Icon -->
+    <path d="M64 28L106 70H94V100H34V70H22L64 28Z" fill="white"/>
+    
+    <!-- Window Lines -->
+    <rect x="48" y="70" width="14" height="30" fill="#64FFDA"/>
+    <rect x="66" y="70" width="14" height="30" fill="#64FFDA"/>
+    
+    <!-- Gradient Definition -->
+    <defs>
+        <linearGradient id="gradient" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" style="stop-color:#1a4f60"/>
+            <stop offset="50%" style="stop-color:#2c5d6f"/>
+            <stop offset="100%" style="stop-color:#367686"/>
+        </linearGradient>
+    </defs>
+</svg>
