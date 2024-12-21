@@ -103,37 +103,134 @@ document.getElementById('new-task').addEventListener('keypress', function(e) {
     }
 });
 
-// Theme Switching
-const themeButtons = document.querySelectorAll('.theme-btn');
-const body = document.body;
+// Theme switcher toggle functionality
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Home page loaded');
+    // Initial update
+    updateTime();
+    // Update every second
+    setInterval(updateTime, 1000);
+    
+    // Theme switcher toggle
+    const toggleBtn = document.getElementById('toggle-theme-switcher');
+    const themeSwitcher = document.querySelector('.theme-switcher');
+    
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themeSwitcher.classList.toggle('active');
+    });
 
-// Load saved theme from localStorage
-const savedTheme = localStorage.getItem('preferred-theme');
-if (savedTheme) {
-    body.setAttribute('data-theme', savedTheme);
-    themeButtons.forEach(btn => {
-        if (btn.dataset.theme === savedTheme) {
-            btn.classList.add('active');
+    // Close theme switcher when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!themeSwitcher.contains(e.target)) {
+            themeSwitcher.classList.remove('active');
         }
     });
-}
 
-themeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        // Remove active class from all buttons
-        themeButtons.forEach(b => b.classList.remove('active'));
-        // Add active class to clicked button
-        btn.classList.add('active');
+    // Custom background functionality
+    const bgUpload = document.getElementById('bg-upload');
+    const customBgBtn = document.querySelector('.custom-bg-btn');
+    
+    function applyCustomBackground(backgroundData) {
+        document.body.style.backgroundImage = `linear-gradient(135deg, 
+            var(--gradient-1),
+            var(--gradient-2),
+            var(--gradient-3),
+            var(--gradient-4)), 
+            url(${backgroundData})`;
         
-        const theme = btn.dataset.theme;
-        body.setAttribute('data-theme', theme);
-        localStorage.setItem('preferred-theme', theme);
-
-        // Add animation effect
-        body.style.animation = 'none';
-        body.offsetHeight; // Trigger reflow
-        body.style.animation = null;
+        // Update active states
+        themeButtons.forEach(btn => btn.classList.remove('active'));
+        customBgBtn.classList.add('active');
+        
+        // Remove theme attribute but keep gradients
+        document.documentElement.removeAttribute('data-theme');
+    }
+    
+    bgUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const backgroundData = e.target.result;
+                // Save the custom background to localStorage
+                localStorage.setItem('custom-background', backgroundData);
+                localStorage.setItem('selected-theme', 'custom');
+                
+                // Apply the custom background
+                applyCustomBackground(backgroundData);
+            };
+            reader.readAsDataURL(file);
+        }
     });
+
+    // Theme buttons functionality
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    
+    function setActiveTheme(theme) {
+        // Check if we should load custom background
+        if (theme === 'custom') {
+            const customBg = localStorage.getItem('custom-background');
+            if (customBg) {
+                applyCustomBackground(customBg);
+                return;
+            }
+        }
+
+        // Reset custom background if switching to a theme
+        document.body.style.backgroundImage = '';
+        customBgBtn.classList.remove('active');
+
+        // Remove previous theme
+        document.documentElement.classList.remove(
+            'theme-ocean',
+            'theme-sunset',
+            'theme-forest',
+            'theme-galaxy',
+            'theme-desert',
+            'theme-arctic',
+            'theme-volcano'
+        );
+        
+        // Set new theme
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.classList.add(`theme-${theme}`);
+        
+        // Save theme preference
+        localStorage.setItem('selected-theme', theme);
+        
+        // Update active button state
+        themeButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-theme') === theme);
+        });
+
+        // Preload next theme's background
+        const nextThemeBtn = document.querySelector(`.theme-btn[data-theme="${theme}"]`).nextElementSibling;
+        if (nextThemeBtn) {
+            const nextTheme = nextThemeBtn.getAttribute('data-theme');
+            const img = new Image();
+            img.src = `images/${nextTheme}.jpg`;
+        }
+    }
+
+    // Preload all theme backgrounds
+    const themes = ['ocean', 'sunset', 'forest', 'galaxy', 'desert', 'arctic', 'volcano'];
+    themes.forEach(theme => {
+        const img = new Image();
+        img.src = `images/${theme}.jpg`;
+    });
+
+    themeButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const theme = button.getAttribute('data-theme');
+            setActiveTheme(theme);
+        });
+    });
+
+    // Load saved theme or default to ocean
+    const savedTheme = localStorage.getItem('selected-theme') || 'ocean';
+    setActiveTheme(savedTheme);
 });
 
 // Sidebar Toggle
@@ -158,57 +255,128 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ChatGPT integration
-async function askChatGPT() {
-    const input = document.getElementById('chatgpt-input');
-    const response = document.getElementById('chatgpt-response');
-    const question = input.value.trim();
-    
-    if (!question) return;
-    
-    response.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
-    
-    try {
-        // Note: You'll need to replace this with your actual API integration
-        // This is just a placeholder to show the UI functionality
-        setTimeout(() => {
-            response.innerHTML = `<div class="chatgpt-answer">
-                <i class="fas fa-robot"></i>
-                <p>To use the ChatGPT integration, you'll need to add your API key and implement the actual API calls.</p>
-            </div>`;
-            input.value = '';
-        }, 1500);
-        
-        // Actual implementation would look something like this:
-        /*
-        const apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer YOUR_API_KEY'
-            },
-            body: JSON.stringify({
-                model: "gpt-3.5-turbo",
-                messages: [{"role": "user", "content": question}]
-            })
-        });
-        const data = await apiResponse.json();
-        response.innerHTML = `<div class="chatgpt-answer">
-            <i class="fas fa-robot"></i>
-            <p>${data.choices[0].message.content}</p>
-        </div>`;
-        */
-    } catch (error) {
-        response.innerHTML = `<div class="chatgpt-answer error">
-            <i class="fas fa-exclamation-circle"></i>
-            <p>Sorry, there was an error processing your request.</p>
-        </div>`;
+// Quick Links functionality with localStorage
+let quickLinks = JSON.parse(localStorage.getItem('quickLinks')) || [];
+
+function saveQuickLinks() {
+    localStorage.setItem('quickLinks', JSON.stringify(quickLinks));
+}
+
+function createQuickLinkElement(link) {
+    const a = document.createElement('a');
+    a.href = link.url;
+    a.classList.add('quick-link');
+    a.target = '_blank';
+    a.innerHTML = `
+        <i class="${link.icon}"></i>
+        <span>${link.name}</span>
+    `;
+    return a;
+}
+
+function loadQuickLinks() {
+    const quickLinksContainer = document.getElementById('quick-links');
+    if (!quickLinksContainer) return;
+
+    // Get reference to add button before clearing
+    const addButton = document.getElementById('add-quick-link');
+    if (addButton) {
+        addButton.remove(); // Temporarily remove the button
+    }
+
+    // Add custom links at the end of the container
+    quickLinks.forEach(link => {
+        quickLinksContainer.appendChild(createQuickLinkElement(link));
+    });
+
+    // Add the button back at the end
+    if (addButton) {
+        quickLinksContainer.appendChild(addButton);
     }
 }
 
-// Handle Enter key in ChatGPT input
-document.getElementById('chatgpt-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        askChatGPT();
+function showAddLinkModal() {
+    const modal = document.getElementById('add-link-modal');
+    if (modal) {
+        modal.style.display = 'block';
+        // Clear previous inputs
+        document.getElementById('link-name').value = '';
+        document.getElementById('link-url').value = '';
+        const iconSelect = document.getElementById('icon-select');
+        if (iconSelect) {
+            iconSelect.selectedIndex = 0;
+            const iconPreview = document.getElementById('icon-preview');
+            if (iconPreview) {
+                iconPreview.innerHTML = '<i class="fas fa-link"></i>';
+            }
+        }
     }
+}
+
+function hideAddLinkModal() {
+    const modal = document.getElementById('add-link-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function addQuickLink() {
+    const name = document.getElementById('link-name').value.trim();
+    const url = document.getElementById('link-url').value.trim();
+    const iconSelect = document.getElementById('icon-select');
+    const icon = iconSelect ? iconSelect.value : 'fas fa-link';
+
+    if (!name || !url) {
+        alert('Please fill in both name and URL fields');
+        return;
+    }
+
+    // Add http:// if no protocol is specified
+    const finalUrl = url.startsWith('http://') || url.startsWith('https://') ? url : 'https://' + url;
+
+    const link = { name, url: finalUrl, icon };
+    quickLinks.push(link);
+    saveQuickLinks();
+    loadQuickLinks();
+    hideAddLinkModal();
+}
+
+// Initialize everything when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Load existing quick links
+    loadQuickLinks();
+    
+    // Set up event listeners
+    const addButton = document.getElementById('add-quick-link');
+    if (addButton) {
+        addButton.addEventListener('click', showAddLinkModal);
+    }
+
+    const saveButton = document.getElementById('save-link');
+    if (saveButton) {
+        saveButton.addEventListener('click', addQuickLink);
+    }
+
+    const cancelButton = document.getElementById('cancel-link');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', hideAddLinkModal);
+    }
+
+    const iconSelect = document.getElementById('icon-select');
+    if (iconSelect) {
+        iconSelect.addEventListener('change', (e) => {
+            const iconPreview = document.getElementById('icon-preview');
+            if (iconPreview) {
+                iconPreview.innerHTML = `<i class="${e.target.value}"></i>`;
+            }
+        });
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('add-link-modal');
+        if (e.target === modal) {
+            hideAddLinkModal();
+        }
+    });
 });

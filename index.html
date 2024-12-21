@@ -1,99 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Home-extension</title>
-  <!-- Favicons -->
-  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.svg">
-  <meta name="theme-color" content="#1a4f60">
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-</head>
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.svg" />
+    <meta name="theme-color" content="#1a4f60" />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
 
-<body>
-  <div class="header">
-    <div class="header-top">
-      <div id="chatgpt-time"></div>
-      <div class="theme-switcher">
-        <button class="theme-btn" data-theme="ocean" title="Ocean Theme">
-          <i class="fas fa-water"></i>
+  <body>
+    <div class="header">
+      <div class="header-top">
+        <div id="chatgpt-time"></div>
+        <button id="toggle-theme-switcher" title="Toggle Theme Switcher">
+          <i class="fas fa-paint-brush"></i>
         </button>
-        <button class="theme-btn" data-theme="sunset" title="Sunset Theme">
-          <i class="fas fa-sun"></i>
-        </button>
-        <button class="theme-btn" data-theme="forest" title="Forest Theme">
-          <i class="fas fa-tree"></i>
-        </button>
-        <button class="theme-btn" data-theme="galaxy" title="Galaxy Theme">
-          <i class="fas fa-star"></i>
+        <div class="theme-switcher">
+         
+          <button class="theme-btn" data-theme="ocean" title="Ocean Theme">
+            <i class="fas fa-water"></i>
+          </button>
+          <button class="theme-btn" data-theme="sunset" title="Sunset Theme">
+            <i class="fas fa-sun"></i>
+          </button>
+          <button class="theme-btn" data-theme="forest" title="Forest Theme">
+            <i class="fas fa-tree"></i>
+          </button>
+          <button class="theme-btn" data-theme="galaxy" title="Galaxy Theme">
+            <i class="fas fa-star"></i>
+          </button>
+          <button class="theme-btn" data-theme="desert" title="Desert Theme">
+            <i class="fas fa-cactus"></i>
+          </button>
+          <button class="theme-btn" data-theme="arctic" title="Arctic Theme">
+            <i class="fas fa-snowflake"></i>
+          </button>
+          <button class="theme-btn" data-theme="volcano" title="Volcano Theme">
+            <i class="fas fa-fire"></i>
+          </button>
+          <label class="custom-bg-btn" title="Set Custom Background">
+            <i class="fas fa-image"></i>
+            <input type="file" id="bg-upload" accept="image/*" hidden>
+          </label>
+        </div>
+      
+      </div>
+    </div>
+
+    <form action="https://www.google.com/search" method="get">
+      <input type="text" name="q" placeholder="Search Google" />
+      <button type="submit"><i class="fas fa-search"></i> Search</button>
+    </form>
+
+    <div class="sidebar">
+      <button class="sidebar-toggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="quick-links" id="quick-links">
+        <a href="https://chat.openai.com" class="quick-link" target="_blank">
+          <i class="fas fa-robot"></i>
+          <span>ChatGPT</span>
+        </a>
+        <a href="https://github.com" class="quick-link" target="_blank">
+          <i class="fab fa-github"></i>
+          <span>GitHub</span>
+        </a>
+        <a href="https://gmail.com" class="quick-link" target="_blank">
+          <i class="fas fa-envelope"></i>
+          <span>Gmail</span>
+        </a>
+        <a href="https://youtube.com" class="quick-link" target="_blank">
+          <i class="fab fa-youtube"></i>
+          <span>YouTube</span>
+        </a>
+        <a href="https://gemini.google.com" class="quick-link" target="_blank">
+          <i class="fas fa-gem"></i>
+          <span>Gemini</span>
+        </a>
+        <a
+          href="https://amigo.amityonline.com/login/index.php"
+          class="quick-link"
+          target="_blank"
+        >
+          <i class="fas fa-gem"></i>
+          <span>Amity</span>
+        </a>
+        <button id="add-quick-link" class="quick-link">
+          <i class="fas fa-plus"></i>
+          <span>Add Link</span>
         </button>
       </div>
     </div>
-  </div>
 
-  <form action="https://www.google.com/search" method="get">
-    <input type="text" name="q" placeholder="Search Google" />
-    <button type="submit"><i class="fas fa-search"></i> Search</button>
-  </form>
-
-  <div class="sidebar">
-    <button class="sidebar-toggle">
-      <i class="fas fa-bars"></i>
-    </button>
-    <div class="quick-links">
-      <a href="https://chat.openai.com" class="quick-link" target="_blank">
-        <i class="fas fa-robot"></i>
-        <span>ChatGPT</span>
-      </a>
-      <a href="https://github.com" class="quick-link" target="_blank">
-        <i class="fab fa-github"></i>
-        <span>GitHub</span>
-      </a>
-      <a href="https://gmail.com" class="quick-link" target="_blank">
-        <i class="fas fa-envelope"></i>
-        <span>Gmail</span>
-      </a>
-      <a href="https://youtube.com" class="quick-link" target="_blank">
-        <i class="fab fa-youtube"></i>
-        <span>YouTube</span>
-      </a>
-    </div>
-  </div>
-
-
-
-  <div class="todo-container">
-    <h2><i class="fas fa-tasks"></i> To-Do List</h2>
-    <div class="todo-input-container">
-      <input type="text" id="new-task" placeholder="What do you need to do?" />
-      <button onclick="addTask()" class="add-task-btn">
-        <i class="fas fa-plus"></i>
-      </button>
-    </div>
-    <ul id="todo-list">
-      <li>
-        <div class="task-content">
-          <input type="checkbox" class="task-checkbox">
-          <span class="task-text">Sample Task 1</span>
+    <!-- Modal for adding new links -->
+    <div id="add-link-modal" class="modal">
+      <div class="modal-content">
+        <h2>Add Quick Link</h2>
+        <div class="modal-form">
+          <input type="text" id="link-name" placeholder="Link Name" />
+          <input
+            type="url"
+            id="link-url"
+            placeholder="Link URL (https://...)"
+          />
+          <div class="icon-selector">
+            <label for="icon-select">Choose an icon:</label>
+            <select id="icon-select">
+              <option value="fas fa-link">🔗 General Link</option>
+              <option value="fab fa-github">GitHub</option>
+              <option value="fab fa-youtube">YouTube</option>
+              <option value="fab fa-twitter">Twitter</option>
+              <option value="fab fa-facebook">Facebook</option>
+              <option value="fab fa-instagram">Instagram</option>
+              <option value="fab fa-linkedin">LinkedIn</option>
+              <option value="fas fa-envelope">Email</option>
+              <option value="fas fa-calendar">Calendar</option>
+              <option value="fas fa-book">Book/Documentation</option>
+              <option value="fas fa-code">Code</option>
+              <option value="fas fa-cloud">Cloud</option>
+              <option value="fas fa-shopping-cart">Shopping</option>
+              <option value="fas fa-music">Music</option>
+              <option value="fas fa-video">Video</option>
+              <option value="fas fa-image">Image/Photos</option>
+              <option value="fas fa-file">Documents</option>
+              <option value="fas fa-chart-bar">Analytics</option>
+              <option value="fas fa-cog">Settings</option>
+            </select>
+            <div id="icon-preview"><i class="fas fa-link"></i></div>
+          </div>
+          <div class="modal-buttons">
+            <button id="save-link">Save</button>
+            <button id="cancel-link">Cancel</button>
+          </div>
         </div>
-        <button class="delete-task"><i class="fas fa-trash"></i></button>
-      </li>
-      <li>
-        <div class="task-content">
-          <input type="checkbox" class="task-checkbox">
-          <span class="task-text">Sample Task 2</span>
-        </div>
-        <button class="delete-task"><i class="fas fa-trash"></i></button>
-      </li>
-    </ul>
-  </div>
+      </div>
+    </div>
 
-  <script src="scripts.js"></script>
-</body>
+    <div class="todo-container">
+      <h2><i class="fas fa-tasks"></i> To-Do List</h2>
+      <div class="todo-input-container">
+        <input
+          type="text"
+          id="new-task"
+          placeholder="What do you need to do?"
+        />
+        <button onclick="addTask()" class="add-task-btn">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+      <ul id="todo-list">
+        <li>
+          <div class="task-content">
+            <input type="checkbox" class="task-checkbox" />
+            <span class="task-text">Sample Task 1</span>
+          </div>
+          <button class="delete-task"><i class="fas fa-trash"></i></button>
+        </li>
+        <li>
+          <div class="task-content">
+            <input type="checkbox" class="task-checkbox" />
+            <span class="task-text">Sample Task 2</span>
+          </div>
+          <button class="delete-task"><i class="fas fa-trash"></i></button>
+        </li>
+      </ul>
+    </div>
 
+    <script src="scripts.js"></script>
+  </body>
 </html>
