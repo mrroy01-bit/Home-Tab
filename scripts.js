@@ -263,15 +263,35 @@ function saveQuickLinks() {
 }
 
 function createQuickLinkElement(link) {
-    const a = document.createElement('a');
-    a.href = link.url;
-    a.classList.add('quick-link');
-    a.target = '_blank';
-    a.innerHTML = `
+    const linkElement = document.createElement('a');
+    linkElement.href = link.url;
+    linkElement.className = 'quick-link';
+    linkElement.target = '_blank';
+    linkElement.innerHTML = `
         <i class="${link.icon}"></i>
         <span>${link.name}</span>
+        <button class="delete-link" title="Delete Link">
+            <i class="fas fa-times"></i>
+        </button>
     `;
-    return a;
+
+    // Add delete functionality
+    const deleteBtn = linkElement.querySelector('.delete-link');
+    deleteBtn.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent link from opening
+        e.stopPropagation(); // Prevent event bubbling
+        
+        // Get stored links
+        let links = JSON.parse(localStorage.getItem('quickLinks')) || [];
+        // Remove the link
+        links = links.filter(l => l.url !== link.url);
+        // Save back to localStorage
+        localStorage.setItem('quickLinks', JSON.stringify(links));
+        // Remove from DOM
+        linkElement.remove();
+    });
+
+    return linkElement;
 }
 
 function loadQuickLinks() {
@@ -379,4 +399,36 @@ document.addEventListener('DOMContentLoaded', () => {
             hideAddLinkModal();
         }
     });
+
+    // Add some CSS styles dynamically for the delete button
+    const style = document.createElement('style');
+    style.textContent = `
+        .quick-link {
+            position: relative;
+        }
+        .delete-link {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            font-size: 12px;
+        }
+        .quick-link:hover .delete-link {
+            display: flex;
+        }
+        .delete-link:hover {
+            background: rgba(255, 0, 0, 1);
+        }
+    `;
+    document.head.appendChild(style);
 });
