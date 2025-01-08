@@ -1,129 +1,298 @@
 // Update time display
 function updateTime() {
     const timeElement = document.getElementById('chatgpt-time');
-    if (!timeElement) return; // Guard clause if element doesn't exist
+    if (!timeElement) return;
 
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const seconds = now.getSeconds().toString().padStart(2, '0');
     
-    // Format time with larger font for hours:minutes
     timeElement.innerHTML = `
         <span style="font-size: 1.2em">${hours}:${minutes}</span>
         <span style="font-size: 0.8em">:${seconds}</span>
     `;
 }
 
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Home page loaded');
-    // Initial update
-    updateTime();
-    // Update every second
-    setInterval(updateTime, 1000);
-});
-
-// Todo list functionality with localStorage
+// Initialize todos from localStorage
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
+let quickLinks = JSON.parse(localStorage.getItem('quickLinks')) || [
+    { name: 'ChatGPT', url: 'https://chat.openai.com', icon: 'fas fa-robot' },
+    { name: 'GitHub', url: 'https://github.com', icon: 'fab fa-github' },
+    { name: 'Gmail', url: 'https://gmail.com', icon: 'fas fa-envelope' },
+    { name: 'YouTube', url: 'https://youtube.com', icon: 'fab fa-youtube' },
+    { name: 'Gemini', url: 'https://gemini.google.com', icon: 'fas fa-gem' },
+    { name: 'Amity', url: 'https://amigo.amityonline.com/login/index.php', icon: 'fas fa-university' }
+];
 
+// Todo List Functions
 function saveTodos() {
     localStorage.setItem('todos', JSON.stringify(todos));
 }
 
-function createTodoElement(task) {
+function createTodoElement(todo) {
     const li = document.createElement('li');
     li.innerHTML = `
-        <div class="task-content">
-            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''}>
-            <span class="task-text">${task.text}</span>
+        <div class="task-content ${todo.completed ? 'completed' : ''}">
+            <input type="checkbox" class="task-checkbox" ${todo.completed ? 'checked' : ''}>
+            <span class="task-text">${todo.text}</span>
         </div>
-        <button class="delete-task"><i class="fas fa-trash"></i></button>
+        <button class="delete-task" title="Delete Task">
+            <i class="fas fa-trash"></i>
+        </button>
     `;
-    
-    if (task.completed) {
-        li.classList.add('completed');
-    }
-    
-    // Add delete functionality
-    li.querySelector('.delete-task').addEventListener('click', function() {
-        const taskIndex = todos.indexOf(task);
-        if (taskIndex > -1) {
-            todos.splice(taskIndex, 1);
-            saveTodos();
-        }
-        li.remove();
-    });
-    
+
     // Add checkbox functionality
-    li.querySelector('.task-checkbox').addEventListener('change', function(e) {
-        task.completed = e.target.checked;
-        if (task.completed) {
-            li.classList.add('completed');
-        } else {
-            li.classList.remove('completed');
-        }
+    const checkbox = li.querySelector('.task-checkbox');
+    checkbox.addEventListener('change', function() {
+        todo.completed = checkbox.checked;
+        const taskContent = li.querySelector('.task-content');
+        taskContent.classList.toggle('completed', todo.completed);
         saveTodos();
     });
-    
+
+    // Add delete functionality
+    const deleteBtn = li.querySelector('.delete-task');
+    deleteBtn.addEventListener('click', function() {
+        todos = todos.filter(t => t.id !== todo.id);
+        saveTodos();
+        li.remove();
+    });
+
     return li;
 }
 
 function loadTodos() {
     const todoList = document.getElementById('todo-list');
-    todoList.innerHTML = ''; // Clear existing list
-    todos.forEach(task => {
-        todoList.appendChild(createTodoElement(task));
+    if (!todoList) return;
+    
+    todoList.innerHTML = '';
+    todos.forEach(todo => {
+        todoList.appendChild(createTodoElement(todo));
     });
 }
 
 function addTask() {
     const input = document.getElementById('new-task');
-    const taskText = input.value.trim();
-    
-    if (taskText) {
-        const task = {
-            text: taskText,
+    if (!input) return;
+
+    const text = input.value.trim();
+    if (text) {
+        const todo = {
+            id: Date.now(),
+            text: text,
             completed: false
         };
-        todos.push(task);
+        
+        todos.push(todo);
         saveTodos();
-        document.getElementById('todo-list').appendChild(createTodoElement(task));
+        
+        const todoList = document.getElementById('todo-list');
+        todoList.appendChild(createTodoElement(todo));
+        
         input.value = '';
     }
 }
 
-// Load saved todos when page loads
-loadTodos();
+// Quick Links Functions
+function saveQuickLinks() {
+    localStorage.setItem('quickLinks', JSON.stringify(quickLinks));
+}
 
-// Handle Enter key in new task input
-document.getElementById('new-task').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        addTask();
+function createQuickLinkElement(link) {
+    const element = document.createElement('a');
+    element.href = link.url;
+    element.className = 'quick-link';
+    element.target = '_blank';
+    element.innerHTML = `
+        <div class="quick-link-content">
+            <i class="${link.icon}"></i>
+            <span>${link.name}</span>
+        </div>
+        <button class="delete-link" title="Delete Link">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    // Add delete functionality
+    const deleteBtn = element.querySelector('.delete-link');
+    deleteBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        quickLinks = quickLinks.filter(l => l.url !== link.url);
+        saveQuickLinks();
+        loadQuickLinks();
+    });
+
+    return element;
+}
+
+function loadQuickLinks() {
+    const container = document.getElementById('quick-links');
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    // Add all quick links
+    quickLinks.forEach(link => {
+        container.appendChild(createQuickLinkElement(link));
+    });
+
+    // Add the "Add Link" button
+    const addButton = document.createElement('button');
+    addButton.id = 'add-quick-link';
+    addButton.className = 'quick-link add-link';
+    addButton.innerHTML = `
+        <i class="fas fa-plus"></i>
+        <span>Add Link</span>
+    `;
+    addButton.addEventListener('click', showAddLinkModal);
+    container.appendChild(addButton);
+}
+
+function showAddLinkModal() {
+    const modal = document.getElementById('add-link-modal');
+    if (modal) {
+        modal.classList.add('active');
+        document.getElementById('link-name').value = '';
+        document.getElementById('link-url').value = '';
+        document.getElementById('icon-select').value = 'fas fa-link';
+        updateIconPreview();
     }
-});
+}
 
-// Theme switcher toggle functionality
+function hideAddLinkModal() {
+    const modal = document.getElementById('add-link-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function addQuickLink() {
+    const name = document.getElementById('link-name').value.trim();
+    const url = document.getElementById('link-url').value.trim();
+    const icon = document.getElementById('icon-select').value;
+
+    if (name && url) {
+        // Add http:// if no protocol specified
+        const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+        
+        const newLink = {
+            name: name,
+            url: fullUrl,
+            icon: icon
+        };
+
+        quickLinks.push(newLink);
+        saveQuickLinks();
+        loadQuickLinks();
+        hideAddLinkModal();
+    }
+}
+
+function updateIconPreview() {
+    const iconSelect = document.getElementById('icon-select');
+    const iconPreview = document.getElementById('icon-preview');
+    if (iconSelect && iconPreview) {
+        iconPreview.innerHTML = `<i class="${iconSelect.value}"></i>`;
+    }
+}
+
+// Initialize event listeners when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Home page loaded');
-    // Initial update
+    // Initialize time
     updateTime();
-    // Update every second
     setInterval(updateTime, 1000);
+    
+    // Load saved todos and quick links
+    loadTodos();
+    loadQuickLinks();
+    
+    // Add task on Enter key
+    const newTaskInput = document.getElementById('new-task');
+    if (newTaskInput) {
+        newTaskInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+    }
+    
+    // Add task button click handler
+    const addTaskBtn = document.querySelector('.add-task-btn');
+    if (addTaskBtn) {
+        addTaskBtn.addEventListener('click', addTask);
+    }
+
+    // Modal handlers
+    const modal = document.getElementById('add-link-modal');
+    const saveBtn = document.getElementById('save-link');
+    const cancelBtn = document.getElementById('cancel-link');
+    const closeBtn = document.getElementById('close-modal');
+    const iconSelect = document.getElementById('icon-select');
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', addQuickLink);
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', hideAddLinkModal);
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', hideAddLinkModal);
+    }
+
+    if (iconSelect) {
+        iconSelect.addEventListener('change', updateIconPreview);
+    }
+
+    // Close modal when clicking outside
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                hideAddLinkModal();
+            }
+        });
+    }
     
     // Theme switcher toggle
     const toggleBtn = document.getElementById('toggle-theme-switcher');
     const themeSwitcher = document.querySelector('.theme-switcher');
     
-    toggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        themeSwitcher.classList.toggle('active');
+    if (toggleBtn && themeSwitcher) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeSwitcher.classList.toggle('active');
+        });
+
+        // Close theme switcher when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!themeSwitcher.contains(e.target)) {
+                themeSwitcher.classList.remove('active');
+            }
+        });
+    }
+
+    // Sidebar Toggle
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    let isSidebarOpen = false;
+
+    sidebarToggle.addEventListener('click', () => {
+        isSidebarOpen = !isSidebarOpen;
+        sidebar.classList.toggle('active');
+        sidebarToggle.innerHTML = isSidebarOpen ? 
+            '<i class="fas fa-times"></i>' : 
+            '<i class="fas fa-bars"></i>';
     });
 
-    // Close theme switcher when clicking outside
+    // Close sidebar when clicking outside
     document.addEventListener('click', (e) => {
-        if (!themeSwitcher.contains(e.target)) {
-            themeSwitcher.classList.remove('active');
+        if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && isSidebarOpen) {
+            isSidebarOpen = false;
+            sidebar.classList.remove('active');
+            sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
         }
     });
 
@@ -231,204 +400,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load saved theme or default to ocean
     const savedTheme = localStorage.getItem('selected-theme') || 'ocean';
     setActiveTheme(savedTheme);
-});
-
-// Sidebar Toggle
-const sidebarToggle = document.querySelector('.sidebar-toggle');
-const sidebar = document.querySelector('.sidebar');
-let isSidebarOpen = false;
-
-sidebarToggle.addEventListener('click', () => {
-    isSidebarOpen = !isSidebarOpen;
-    sidebar.classList.toggle('active');
-    sidebarToggle.innerHTML = isSidebarOpen ? 
-        '<i class="fas fa-times"></i>' : 
-        '<i class="fas fa-bars"></i>';
-});
-
-// Close sidebar when clicking outside
-document.addEventListener('click', (e) => {
-    if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && isSidebarOpen) {
-        isSidebarOpen = false;
-        sidebar.classList.remove('active');
-        sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    }
-});
-
-// Quick Links functionality with localStorage
-let quickLinks = JSON.parse(localStorage.getItem('quickLinks')) || [];
-
-function saveQuickLinks() {
-    localStorage.setItem('quickLinks', JSON.stringify(quickLinks));
-}
-
-function createQuickLinkElement(link) {
-    const linkElement = document.createElement('a');
-    linkElement.href = link.url;
-    linkElement.className = 'quick-link';
-    linkElement.target = '_blank';
-    linkElement.innerHTML = `
-        <i class="${link.icon}"></i>
-        <span>${link.name}</span>
-        <button class="delete-link" title="Delete Link">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-
-    // Add delete functionality
-    const deleteBtn = linkElement.querySelector('.delete-link');
-    deleteBtn.addEventListener('click', (e) => {
-        e.preventDefault(); // Prevent link from opening
-        e.stopPropagation(); // Prevent event bubbling
-        
-        // Get stored links
-        let links = JSON.parse(localStorage.getItem('quickLinks')) || [];
-        // Remove the link
-        links = links.filter(l => l.url !== link.url);
-        // Save back to localStorage
-        localStorage.setItem('quickLinks', JSON.stringify(links));
-        // Remove from DOM
-        linkElement.remove();
-    });
-
-    return linkElement;
-}
-
-function loadQuickLinks() {
-    const quickLinksContainer = document.getElementById('quick-links');
-    if (!quickLinksContainer) return;
-
-    // Get reference to add button before clearing
-    const addButton = document.getElementById('add-quick-link');
-    if (addButton) {
-        addButton.remove(); // Temporarily remove the button
-    }
-
-    // Add custom links at the end of the container
-    quickLinks.forEach(link => {
-        quickLinksContainer.appendChild(createQuickLinkElement(link));
-    });
-
-    // Add the button back at the end
-    if (addButton) {
-        quickLinksContainer.appendChild(addButton);
-    }
-}
-
-function showAddLinkModal() {
-    const modal = document.getElementById('add-link-modal');
-    if (modal) {
-        modal.style.display = 'block';
-        // Clear previous inputs
-        document.getElementById('link-name').value = '';
-        document.getElementById('link-url').value = '';
-        const iconSelect = document.getElementById('icon-select');
-        if (iconSelect) {
-            iconSelect.selectedIndex = 0;
-            const iconPreview = document.getElementById('icon-preview');
-            if (iconPreview) {
-                iconPreview.innerHTML = '<i class="fas fa-link"></i>';
-            }
-        }
-    }
-}
-
-function hideAddLinkModal() {
-    const modal = document.getElementById('add-link-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-function addQuickLink() {
-    const name = document.getElementById('link-name').value.trim();
-    const url = document.getElementById('link-url').value.trim();
-    const iconSelect = document.getElementById('icon-select');
-    const icon = iconSelect ? iconSelect.value : 'fas fa-link';
-
-    if (!name || !url) {
-        alert('Please fill in both name and URL fields');
-        return;
-    }
-
-    // Add http:// if no protocol is specified
-    const finalUrl = url.startsWith('http://') || url.startsWith('https://') ? url : 'https://' + url;
-
-    const link = { name, url: finalUrl, icon };
-    quickLinks.push(link);
-    saveQuickLinks();
-    loadQuickLinks();
-    hideAddLinkModal();
-}
-
-// Initialize everything when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    // Load existing quick links
-    loadQuickLinks();
-    
-    // Set up event listeners
-    const addButton = document.getElementById('add-quick-link');
-    if (addButton) {
-        addButton.addEventListener('click', showAddLinkModal);
-    }
-
-    const saveButton = document.getElementById('save-link');
-    if (saveButton) {
-        saveButton.addEventListener('click', addQuickLink);
-    }
-
-    const cancelButton = document.getElementById('cancel-link');
-    if (cancelButton) {
-        cancelButton.addEventListener('click', hideAddLinkModal);
-    }
-
-    const iconSelect = document.getElementById('icon-select');
-    if (iconSelect) {
-        iconSelect.addEventListener('change', (e) => {
-            const iconPreview = document.getElementById('icon-preview');
-            if (iconPreview) {
-                iconPreview.innerHTML = `<i class="${e.target.value}"></i>`;
-            }
-        });
-    }
-
-    // Close modal when clicking outside
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('add-link-modal');
-        if (e.target === modal) {
-            hideAddLinkModal();
-        }
-    });
-
-    // Add some CSS styles dynamically for the delete button
-    const style = document.createElement('style');
-    style.textContent = `
-        .quick-link {
-            position: relative;
-        }
-        .delete-link {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: rgba(255, 0, 0, 0.8);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            padding: 0;
-            font-size: 12px;
-        }
-        .quick-link:hover .delete-link {
-            display: flex;
-        }
-        .delete-link:hover {
-            background: rgba(255, 0, 0, 1);
-        }
-    `;
-    document.head.appendChild(style);
 });
