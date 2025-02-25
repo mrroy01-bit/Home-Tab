@@ -32,33 +32,30 @@ function saveTodos() {
 
 function createTodoElement(todo) {
     const li = document.createElement('li');
-    li.innerHTML = `
-        <div class="task-content ${todo.completed ? 'completed' : ''}">
-            <input type="checkbox" class="task-checkbox" ${todo.completed ? 'checked' : ''}>
-            <span class="task-text">${todo.text}</span>
-        </div>
-        <button class="delete-task" title="Delete Task">
-            <i class="fas fa-trash"></i>
-        </button>
-    `;
-
-    // Add checkbox functionality
-    const checkbox = li.querySelector('.task-checkbox');
-    checkbox.addEventListener('change', function() {
-        todo.completed = checkbox.checked;
-        const taskContent = li.querySelector('.task-content');
-        taskContent.classList.toggle('completed', todo.completed);
-        saveTodos();
-    });
-
-    // Add delete functionality
-    const deleteBtn = li.querySelector('.delete-task');
-    deleteBtn.addEventListener('click', function() {
-        todos = todos.filter(t => t.id !== todo.id);
-        saveTodos();
-        li.remove();
-    });
-
+    li.dataset.taskId = todo.id;
+    
+    const div = document.createElement('div');
+    div.className = `task-content ${todo.completed ? 'completed' : ''}`;
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'task-checkbox';
+    checkbox.checked = todo.completed;
+    
+    const span = document.createElement('span');
+    span.className = 'task-text';
+    span.textContent = todo.text;
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-task';
+    deleteBtn.title = 'Delete Task';
+    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+    
+    div.appendChild(checkbox);
+    div.appendChild(span);
+    li.appendChild(div);
+    li.appendChild(deleteBtn);
+    
     return li;
 }
 
@@ -74,24 +71,24 @@ function loadTodos() {
 
 function addTask() {
     const input = document.getElementById('new-task');
-    if (!input) return;
-
     const text = input.value.trim();
-    if (text) {
-        const todo = {
-            id: Date.now(),
-            text: text,
-            completed: false
-        };
-        
-        todos.push(todo);
-        saveTodos();
-        
-        const todoList = document.getElementById('todo-list');
-        todoList.appendChild(createTodoElement(todo));
-        
-        input.value = '';
-    }
+    if (!text) return;
+
+    const priority = window.prompt('Set priority (high/medium/low)', 'medium');
+    const task = {
+        id: Date.now(),
+        text,
+        priority: priority || 'medium',
+        completed: false,
+        created: new Date()
+    };
+
+    const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    tasks.push(task);
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    
+    renderTasks();
+    input.value = '';
 }
 
 // Quick Links Functions
@@ -104,26 +101,26 @@ function createQuickLinkElement(link) {
     element.href = link.url;
     element.className = 'quick-link';
     element.target = '_blank';
-    element.innerHTML = `
-        <div class="quick-link-content">
-            <i class="${link.icon}"></i>
-            <span>${link.name}</span>
-        </div>
-        <button class="delete-link" title="Delete Link">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-
-    // Add delete functionality
-    const deleteBtn = element.querySelector('.delete-link');
-    deleteBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        quickLinks = quickLinks.filter(l => l.url !== link.url);
-        saveQuickLinks();
-        loadQuickLinks();
-    });
-
+    
+    const content = document.createElement('div');
+    content.className = 'quick-link-content';
+    
+    const icon = document.createElement('i');
+    icon.className = link.icon;
+    
+    const span = document.createElement('span');
+    span.textContent = link.name;
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-link';
+    deleteBtn.title = 'Delete Link';
+    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+    
+    content.appendChild(icon);
+    content.appendChild(span);
+    element.appendChild(content);
+    element.appendChild(deleteBtn);
+    
     return element;
 }
 
@@ -196,6 +193,112 @@ function updateIconPreview() {
     if (iconSelect && iconPreview) {
         iconPreview.innerHTML = `<i class="${iconSelect.value}"></i>`;
     }
+}
+
+function initializeTheme() {
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    const customBgBtn = document.querySelector('.custom-bg-btn');
+    
+    function applyCustomBackground(backgroundData) {
+        document.body.style.backgroundImage = `url(${backgroundData})`;
+        themeButtons.forEach(btn => btn.classList.remove('active'));
+        customBgBtn.classList.add('active');
+        document.documentElement.removeAttribute('data-theme');
+    }
+
+    function setActiveTheme(theme) {
+        // Reset any existing styles
+        document.body.style.backgroundImage = '';
+        document.documentElement.removeAttribute('data-theme');
+        themeButtons.forEach(btn => btn.classList.remove('active'));
+
+        if (theme === 'custom') {
+            const customBg = localStorage.getItem('custom-background');
+            if (customBg) {
+                applyCustomBackground(customBg);
+                return;
+            }
+        }
+
+        // Apply the selected theme
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        // Update active state
+        const activeButton = document.querySelector(`[data-theme="${theme}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+
+        // Save theme preference
+        localStorage.setItem('selected-theme', theme);
+    }
+
+    // Handle theme button clicks
+    themeButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const theme = button.getAttribute('data-theme');
+            setActiveTheme(theme);
+        });
+    });
+
+    // Handle custom background upload
+    const bgUpload = document.getElementById('bg-upload');
+    bgUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const backgroundData = e.target.result;
+                localStorage.setItem('custom-background', backgroundData);
+                localStorage.setItem('selected-theme', 'custom');
+                applyCustomBackground(backgroundData);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Load saved theme on startup
+    const savedTheme = localStorage.getItem('selected-theme') || 'ocean';
+    setActiveTheme(savedTheme);
+}
+
+function attachEventListeners() {
+    // Task checkbox and delete handlers
+    document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const taskContent = this.closest('.task-content');
+            taskContent.classList.toggle('completed', this.checked);
+            // Update todos array and save
+            const taskId = this.closest('li').dataset.taskId;
+            const todo = todos.find(t => t.id === parseInt(taskId));
+            if (todo) {
+                todo.completed = this.checked;
+                saveTodos();
+            }
+        });
+    });
+
+    document.querySelectorAll('.delete-task').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const taskId = this.closest('li').dataset.taskId;
+            todos = todos.filter(t => t.id !== parseInt(taskId));
+            saveTodos();
+            this.closest('li').remove();
+        });
+    });
+
+    // Quick link delete handlers
+    document.querySelectorAll('.delete-link').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const url = this.closest('a').href;
+            quickLinks = quickLinks.filter(l => l.url !== url);
+            saveQuickLinks();
+            loadQuickLinks();
+        });
+    });
 }
 
 // Initialize event listeners when DOM is loaded
@@ -348,22 +451,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset custom background if switching to a theme
         document.body.style.backgroundImage = '';
+        document.body.style.backgroundColor = '';
         customBgBtn.classList.remove('active');
 
         // Remove previous theme
-        document.documentElement.classList.remove(
-            'theme-ocean',
-            'theme-sunset',
-            'theme-forest',
-            'theme-galaxy',
-            'theme-desert',
-            'theme-arctic',
-            'theme-volcano'
-        );
+        document.documentElement.removeAttribute('data-theme');
         
         // Set new theme
         document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.classList.add(`theme-${theme}`);
         
         // Save theme preference
         localStorage.setItem('selected-theme', theme);
@@ -372,14 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
         themeButtons.forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-theme') === theme);
         });
-
-        // Preload next theme's background
-        const nextThemeBtn = document.querySelector(`.theme-btn[data-theme="${theme}"]`).nextElementSibling;
-        if (nextThemeBtn) {
-            const nextTheme = nextThemeBtn.getAttribute('data-theme');
-            const img = new Image();
-            img.src = `images/${nextTheme}.jpg`;
-        }
     }
 
     // Preload all theme backgrounds
@@ -400,4 +487,92 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load saved theme or default to ocean
     const savedTheme = localStorage.getItem('selected-theme') || 'ocean';
     setActiveTheme(savedTheme);
+    initializeTheme();
+
+    // Attach event listeners after loading content
+    attachEventListeners();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === '/') { // Focus search
+        e.preventDefault();
+        document.querySelector('.search-input').focus();
+    }
+    if (e.ctrlKey && e.key === 'n') { // New task
+        e.preventDefault();
+        document.getElementById('new-task').focus();
+    }
+    if (e.ctrlKey && e.key === 't') { // Toggle theme switcher
+        e.preventDefault();
+        document.querySelector('.theme-switcher').classList.toggle('active');
+    }
+});
+
+// Drag and Drop for Quick Links
+const quickLinks = document.querySelector('.quick-links-grid');
+let draggingElement = null;
+
+quickLinks.addEventListener('dragstart', (e) => {
+    if (e.target.classList.contains('quick-link')) {
+        draggingElement = e.target;
+        e.target.classList.add('dragging');
+    }
+});
+
+quickLinks.addEventListener('dragend', (e) => {
+    if (e.target.classList.contains('quick-link')) {
+        e.target.classList.remove('dragging');
+    }
+});
+
+quickLinks.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(quickLinks, e.clientY);
+    const draggable = document.querySelector('.dragging');
+    if (afterElement == null) {
+        quickLinks.appendChild(draggable);
+    } else {
+        quickLinks.insertBefore(draggable, afterElement);
+    }
+});
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.quick-link:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Search History
+const searchInput = document.querySelector('.search-input');
+let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+
+searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const query = searchInput.value.trim();
+        if (query) {
+            searchHistory.unshift(query);
+            searchHistory = searchHistory.slice(0, 5); // Keep last 5 searches
+            localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+        }
+    }
+});
+
+// Theme Preview
+document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', () => {
+        document.body.dataset.previewTheme = btn.dataset.theme;
+    });
+    
+    btn.addEventListener('mouseleave', () => {
+        delete document.body.dataset.previewTheme;
+    });
 });

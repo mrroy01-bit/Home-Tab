@@ -8,7 +8,66 @@
     <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.svg" />
     <meta name="theme-color" content="#1a4f60" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      body {
+        transition: background-color 0.5s, color 0.5s;
+      }
+      .theme-btn {
+        transition: background-color 0.3s, color 0.3s;
+      }
+      .modal-content {
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Button Styles */
+      .theme-btn,
+      .add-task-btn,
+      .search-button,
+      .quick-link {
+        transition: background-color 0.3s, color 0.3s;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .theme-btn:hover,
+      .add-task-btn:hover,
+      .search-button:hover,
+      .quick-link:hover {
+        background-color: #1a4f60;
+        color: white;
+      }
+      .theme-btn:active,
+      .add-task-btn:active,
+      .search-button:active,
+      .quick-link:active {
+        transform: scale(0.95);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header-content {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .quick-links-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      /* Accessibility Enhancements */
+      .modal {
+        display: none;
+      }
+      .modal[aria-hidden="false"] {
+        display: block;
+      }
+    </style>
   </head>
 
   <body>
@@ -20,12 +79,16 @@
             <div id="chatgpt-time" class="time-display"></div>
           </div>
           <div class="header-right">
-            <button id="toggle-theme-switcher" class="theme-toggle" title="Toggle Theme Switcher">
+            <button
+              id="toggle-theme-switcher"
+              class="theme-toggle"
+              title="Toggle Theme Switcher"
+            >
               <i class="fas fa-paint-brush"></i>
             </button>
           </div>
         </div>
-        
+
         <!-- Theme Switcher Panel -->
         <div class="theme-switcher">
           <div class="theme-grid">
@@ -53,14 +116,18 @@
               <i class="fas fa-snowflake"></i>
               <span>Arctic</span>
             </button>
-            <button class="theme-btn" data-theme="volcano" title="Volcano Theme">
+            <button
+              class="theme-btn"
+              data-theme="volcano"
+              title="Volcano Theme"
+            >
               <i class="fas fa-fire"></i>
               <span>Volcano</span>
             </button>
             <label class="custom-bg-btn" title="Set Custom Background">
               <i class="fas fa-image"></i>
               <span>Custom</span>
-              <input type="file" id="bg-upload" accept="image/*" hidden>
+              <input type="file" id="bg-upload" accept="image/*" hidden />
             </label>
           </div>
         </div>
@@ -70,10 +137,19 @@
       <main class="main-content">
         <!-- Search Section -->
         <div class="search-container">
-          <form action="https://www.google.com/search" method="get" class="search-form">
+          <form
+            action="https://www.google.com/search"
+            method="get"
+            class="search-form"
+          >
             <div class="search-wrapper">
               <i class="fas fa-search search-icon"></i>
-              <input type="text" name="q" placeholder="Search Google..." class="search-input" />
+              <input
+                type="text"
+                name="q"
+                placeholder="Search Google..."
+                class="search-input"
+              />
               <button type="submit" class="search-button">Search</button>
             </div>
           </form>
@@ -82,7 +158,11 @@
         <!-- Quick Links Grid -->
         <div class="quick-links-container">
           <div class="quick-links-grid" id="quick-links">
-            <a href="https://chat.openai.com" class="quick-link" target="_blank">
+            <a
+              href="https://chat.openai.com"
+              class="quick-link"
+              target="_blank"
+            >
               <i class="fas fa-robot"></i>
               <span>ChatGPT</span>
             </a>
@@ -98,11 +178,19 @@
               <i class="fab fa-youtube"></i>
               <span>YouTube</span>
             </a>
-            <a href="https://gemini.google.com" class="quick-link" target="_blank">
+            <a
+              href="https://gemini.google.com"
+              class="quick-link"
+              target="_blank"
+            >
               <i class="fas fa-gem"></i>
               <span>Gemini</span>
             </a>
-            <a href="https://amigo.amityonline.com/login/index.php" class="quick-link" target="_blank">
+            <a
+              href="https://amigo.amityonline.com/login/index.php"
+              class="quick-link"
+              target="_blank"
+            >
               <i class="fas fa-university"></i>
               <span>Amity</span>
             </a>
@@ -118,12 +206,20 @@
           <div class="todo-container">
             <div class="todo-header">
               <h2><i class="fas fa-tasks"></i> Tasks</h2>
-              <button onclick="refreshTasks()" class="refresh-tasks-btn" title="Refresh Tasks">
+              <button
+                onclick="refreshTasks()"
+                class="refresh-tasks-btn"
+                title="Refresh Tasks"
+              >
                 <i class="fas fa-sync-alt"></i>
               </button>
             </div>
             <div class="todo-input-container">
-              <input type="text" id="new-task" placeholder="Add a new task..." />
+              <input
+                type="text"
+                id="new-task"
+                placeholder="Add a new task..."
+              />
               <button onclick="addTask()" class="add-task-btn">
                 <i class="fas fa-plus"></i>
               </button>
@@ -137,7 +233,7 @@
     </div>
 
     <!-- Add Link Modal -->
-    <div id="add-link-modal" class="modal">
+    <div id="add-link-modal" class="modal" aria-hidden="true">
       <div class="modal-content">
         <div class="modal-header">
           <h2>Add Quick Link</h2>
@@ -189,6 +285,25 @@
       </div>
     </div>
 
+    <script>
+      const modal = document.getElementById("add-link-modal");
+      const modalClose = document.getElementById("close-modal");
+      const addLinkButton = document.getElementById("add-quick-link");
+
+      addLinkButton.addEventListener("click", () => {
+        modal.setAttribute("aria-hidden", "false");
+      });
+
+      modalClose.addEventListener("click", () => {
+        modal.setAttribute("aria-hidden", "true");
+      });
+
+      window.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          modal.setAttribute("aria-hidden", "true");
+        }
+      });
+    </script>
     <script src="scripts.js"></script>
   </body>
 </html>
