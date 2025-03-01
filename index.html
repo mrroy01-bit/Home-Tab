@@ -13,6 +13,62 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+    <style>
+      body {
+        transition: background-color 0.5s, color 0.5s;
+      }
+      .theme-btn {
+        transition: background-color 0.3s, color 0.3s;
+      }
+      .modal-content {
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Button Styles */
+      .theme-btn,
+      .add-task-btn,
+      .search-button,
+      .quick-link {
+        transition: background-color 0.3s, color 0.3s;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .theme-btn:hover,
+      .add-task-btn:hover,
+      .search-button:hover,
+      .quick-link:hover {
+        background-color: #1a4f60;
+        color: white;
+      }
+      .theme-btn:active,
+      .add-task-btn:active,
+      .search-button:active,
+      .quick-link:active {
+        transform: scale(0.95);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header-content {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .quick-links-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      /* Accessibility Enhancements */
+      .modal {
+        display: none;
+      }
+      .modal[aria-hidden="false"] {
+        display: block;
+      }
+    </style>
   </head>
   <body>
     <div class="app-container">
