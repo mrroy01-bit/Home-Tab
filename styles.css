@@ -8,13 +8,18 @@
   --accent-hover: #72ffe8;
   --text-color: #f0f8ff;
   --border-color: rgba(255, 255, 255, 0.2);
-  --bg-color: rgba(255, 255, 255, 0.12);
+  --bg-color: rgba(255, 255, 255, 0.12); /* General background for elements */
   --input-bg: rgba(255, 255, 255, 0.12);
   --bg-gradient-1: rgba(26, 79, 96, 0.8);
   --bg-gradient-2: rgba(31, 96, 117, 0.8);
   --bg-gradient-3: rgba(37, 113, 137, 0.8);
   --bg-gradient-4: rgba(42, 130, 158, 0.8);
-  --theme-bg: url('images/ocean.jpg');
+  --theme-bg: url('images/ocean.jpg'); /* Default background image */
+
+  /* Task Priority Colors */
+  --priority-high-color: #ff6b6b; /* Reddish */
+  --priority-medium-color: #ffa500; /* Orange */
+  --priority-low-color: #54a0ff; /* Blueish */
 }
 
 /* Theme Variations */
@@ -88,7 +93,6 @@
   --theme-bg: url('images/volcano.jpg');
 }
 
-/* New "Midnight" Theme */
 [data-theme="midnight"] {
   --accent: #a29bfe;
   --accent-hover: #6c5ce7;
@@ -99,6 +103,33 @@
   --theme-bg: url('images/midnight.jpg');
 }
 
+/* --- NEW THEMES --- */
+[data-theme="minimalist"] {
+  --accent: #888; /* Grey accent */
+  --accent-hover: #aaa;
+  --text-color: #333; /* Dark text */
+  --border-color: rgba(0, 0, 0, 0.1);
+  --bg-color: rgba(0, 0, 0, 0.05); /* Lighter element background */
+  --input-bg: rgba(0, 0, 0, 0.05);
+  --bg-gradient-1: #f5f5f5; /* Light grey solid background */
+  --bg-gradient-2: #f5f5f5;
+  --bg-gradient-3: #f5f5f5;
+  --bg-gradient-4: #f5f5f5;
+  --theme-bg: none; /* No background image */
+}
+
+[data-theme="cityscape"] {
+  --accent: #00bcd4; /* Cyan accent */
+  --accent-hover: #1dccdf;
+  --bg-gradient-1: rgba(25, 25, 112, 0.8); /* Midnight Blue */
+  --bg-gradient-2: rgba(72, 61, 139, 0.8); /* Dark Slate Blue */
+  --bg-gradient-3: rgba(106, 90, 205, 0.8); /* Slate Blue */
+  --bg-gradient-4: rgba(123, 104, 238, 0.8); /* Medium Slate Blue */
+  --theme-bg: url('images/cityscape.jpg'); /* Needs cityscape.jpg in images */
+}
+/* --- END NEW THEMES --- */
+
+
 /* Global Styles */
 * {
   margin: 0;
@@ -108,7 +139,8 @@
 
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, 
+  /* Apply background image first, then gradient overlay */
+  background-image: var(--theme-bg), linear-gradient(135deg,
     var(--bg-gradient-1),
     var(--bg-gradient-2),
     var(--bg-gradient-3),
@@ -121,8 +153,19 @@ body {
   color: var(--text-color);
   min-height: 100vh;
   line-height: 1.6;
-  transition: var(--transition);
+  transition: background-image 0.5s ease, color 0.5s ease; /* Smooth theme transition */
 }
+
+/* Apply gradient only when theme-bg is none (e.g., minimalist) */
+body:has([data-theme="minimalist"]) {
+   background-image: linear-gradient(135deg,
+    var(--bg-gradient-1),
+    var(--bg-gradient-2),
+    var(--bg-gradient-3),
+    var(--bg-gradient-4)
+  );
+}
+
 
 .app-container {
   max-width: 1200px;
@@ -133,6 +176,7 @@ body {
 /* Header Styles */
 .header {
   margin-bottom: 40px;
+  position: relative; /* Needed for theme switcher positioning */
 }
 
 .header-content {
@@ -144,6 +188,7 @@ body {
   backdrop-filter: blur(10px);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
+  border: 1px solid var(--border-color); /* Subtle border */
 }
 
 .time-display {
@@ -159,19 +204,21 @@ body {
   cursor: pointer;
   padding: 8px;
   transition: var(--transition);
+  border-radius: 50%; /* Make it circular */
 }
 
 .theme-toggle:hover {
   color: var(--accent);
   transform: rotate(15deg);
+  background-color: rgba(255, 255, 255, 0.1); /* Slight hover background */
 }
 
 /* Theme Switcher */
 .theme-switcher {
-  display: none;
+  display: none; /* Hidden by default */
   position: absolute;
-  right: 20px;
-  top: 80px;
+  right: 0; /* Align to the right of the header */
+  top: calc(100% + 10px); /* Position below the header */
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(10px);
   border-radius: var(--border-radius);
@@ -179,18 +226,20 @@ body {
   box-shadow: var(--shadow);
   z-index: 1000;
   border: 1px solid var(--border-color);
+  width: auto; /* Adjust width based on content */
+  max-width: 500px; /* Limit max width */
 }
 
 .theme-switcher.active {
   display: block;
-  animation: slideIn 0.3s ease;
+  animation: slideIn 0.3s ease forwards; /* Use forwards to keep final state */
 }
 
 .theme-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  /* Adjust columns for more themes */
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 15px;
-  max-width: 450px;
 }
 
 .theme-btn,
@@ -198,8 +247,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center; /* Center content vertically */
   gap: 8px;
-  padding: 15px;
+  padding: 15px 10px; /* Adjust padding */
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -208,37 +258,41 @@ body {
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+  text-align: center;
+  min-height: 100px; /* Ensure buttons have a minimum height */
 }
 
 .theme-btn:hover,
 .custom-bg-btn:hover {
   background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+  transform: translateY(-3px); /* Slightly more lift */
   border-color: var(--accent);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add hover shadow */
 }
 
 .theme-btn.active {
   background: rgba(255, 255, 255, 0.3);
   border-color: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
+  box-shadow: 0 0 12px var(--accent); /* More prominent active shadow */
+  transform: translateY(-1px); /* Slight lift when active */
 }
 
 .theme-btn i,
 .custom-bg-btn i {
-  font-size: 1.5rem;
+  font-size: 1.6rem; /* Slightly larger icons */
   margin-bottom: 5px;
 }
 
 .theme-btn span,
 .custom-bg-btn span {
-  font-size: 0.9rem;
+  font-size: 0.85rem; /* Adjust font size */
   font-weight: 500;
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-15px);
   }
   to {
     opacity: 1;
@@ -263,15 +317,17 @@ body {
   align-items: center;
   background: var(--bg-color);
   backdrop-filter: blur(10px);
-  border-radius: var(--border-radius);
-  padding: 8px 16px;
+  border-radius: 50px; /* Make it pill-shaped */
+  padding: 8px 20px; /* Adjust padding */
   box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
 }
 
 .search-icon {
   color: var(--text-color);
   opacity: 0.7;
   margin-right: 12px;
+  font-size: 1.1rem; /* Slightly larger icon */
 }
 
 .search-input {
@@ -285,6 +341,7 @@ body {
 
 .search-input::placeholder {
   color: rgba(255, 255, 255, 0.7);
+  opacity: 0.8; /* Make placeholder slightly more visible */
 }
 
 .search-input:focus {
@@ -293,18 +350,26 @@ body {
 
 .search-button {
   background: var(--accent);
-  color: #000;
+  color: #000; /* Ensure contrast, might need adjustment for light accents */
   border: none;
-  padding: 12px 24px;
-  border-radius: var(--border-radius);
-  font-weight: 500;
+  padding: 10px 20px; /* Adjust padding */
+  border-radius: 50px; /* Match pill shape */
+  font-weight: 600; /* Bolder text */
   cursor: pointer;
   transition: var(--transition);
+  margin-left: 10px; /* Add space between input and button */
 }
+
+/* Adjust search button text color for minimalist theme for contrast */
+[data-theme="minimalist"] .search-button {
+    color: #fff;
+}
+
 
 .search-button:hover {
   background: var(--accent-hover);
-  transform: translateY(-2px);
+  transform: scale(1.05); /* Add scaling effect */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 /* Quick Links */
@@ -314,21 +379,23 @@ body {
 
 .quick-links-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Adjust minmax */
   gap: 20px;
-  padding: 20px;
+  padding: 25px; /* Increase padding */
   background: var(--bg-color);
   backdrop-filter: blur(10px);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
 }
 
 .quick-link {
   display: flex;
+  flex-direction: column; /* Stack icon and text */
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 20px;
+  gap: 10px; /* Space between icon and text */
+  padding: 20px 15px; /* Adjust padding */
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -337,28 +404,54 @@ body {
   transition: var(--transition);
   animation: fadeIn 0.3s ease-in-out;
   transform-origin: center;
+  position: relative; /* Needed for delete button positioning */
+  text-align: center;
 }
 
 .quick-link:hover {
   background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.03); /* Add scaling on hover */
+  border-color: var(--accent); /* Highlight border on hover */
 }
 
-.quick-link i {
-  font-size: 1.8rem;
+.quick-link-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px; /* Consistent gap */
 }
+
+
+.quick-link i {
+  font-size: 2rem; /* Larger icons */
+  margin-bottom: 5px; /* Space below icon */
+}
+
+.quick-link span {
+    font-size: 0.9rem; /* Adjust text size */
+    font-weight: 500;
+}
+
 
 .quick-link.add-link {
   border: 2px dashed var(--border-color);
   background: transparent;
   cursor: pointer;
+  color: rgba(255, 255, 255, 0.7);
 }
+
+.quick-link.add-link:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+}
+
 
 .delete-link {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255, 255, 255, 0.1);
+  top: 8px; /* Adjust position */
+  right: 8px; /* Adjust position */
+  background: rgba(0, 0, 0, 0.3); /* Darker background for visibility */
   border: none;
   border-radius: 50%;
   width: 24px;
@@ -368,23 +461,25 @@ body {
   justify-content: center;
   color: var(--text-color);
   cursor: pointer;
-  opacity: 0;
+  opacity: 0; /* Hidden by default */
   transition: all 0.3s ease;
   backdrop-filter: blur(5px);
+  z-index: 2; /* Ensure it's above content */
 }
 
 .quick-link:hover .delete-link {
-  opacity: 0.8;
+  opacity: 0.8; /* Show on hover */
 }
 
 .delete-link:hover {
   opacity: 1;
-  background: rgba(255, 0, 0, 0.2);
+  background: rgba(255, 0, 0, 0.5); /* Red background on hover */
   transform: scale(1.1);
 }
 
 .delete-link i {
-  font-size: 12px;
+  font-size: 12px; /* Keep icon size small */
+  margin: 0; /* Reset margin */
 }
 
 /* Todo Section */
@@ -398,6 +493,7 @@ body {
   border-radius: var(--border-radius);
   padding: 24px;
   box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
 }
 
 .todo-header {
@@ -405,6 +501,8 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color); /* Add separator */
+  padding-bottom: 15px;
 }
 
 .todo-header h2 {
@@ -413,6 +511,7 @@ body {
   gap: 12px;
   font-size: 1.5rem;
   margin: 0;
+  color: var(--accent); /* Use accent color for header */
 }
 
 .refresh-tasks-btn {
@@ -459,7 +558,7 @@ body {
 
 .todo-input-container input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--input-bg); /* Use specific input background */
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   padding: 12px 16px;
@@ -467,36 +566,85 @@ body {
   font-size: 1rem;
 }
 
+.todo-input-container input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 5px var(--accent);
+}
+
 .add-task-btn {
   background: var(--accent);
-  color: #000;
+  color: #000; /* Adjust contrast if needed */
   border: none;
-  width: 40px;
-  height: 40px;
+  width: 44px; /* Slightly larger */
+  height: 44px; /* Slightly larger */
   border-radius: 50%;
   cursor: pointer;
   transition: var(--transition);
+  display: flex; /* Center icon */
+  align-items: center; /* Center icon */
+  justify-content: center; /* Center icon */
+  font-size: 1.2rem; /* Adjust icon size */
+}
+
+/* Adjust add task button text color for minimalist theme for contrast */
+[data-theme="minimalist"] .add-task-btn {
+    color: #fff;
 }
 
 .add-task-btn:hover {
   background: var(--accent-hover);
-  transform: rotate(90deg);
+  transform: rotate(90deg) scale(1.1); /* Add scaling */
 }
 
 .todo-list {
   list-style: none;
+  max-height: 300px; /* Limit height and allow scrolling */
+  overflow-y: auto; /* Add scrollbar if needed */
+  padding-right: 10px; /* Space for scrollbar */
 }
+
+/* Custom Scrollbar */
+.todo-list::-webkit-scrollbar {
+  width: 8px;
+}
+.todo-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+.todo-list::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+.todo-list::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-hover);
+}
+
 
 .todo-list li {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08); /* Slightly different background */
   border-radius: var(--border-radius);
-  margin-bottom: 8px;
+  margin-bottom: 10px; /* Increase spacing */
   transition: var(--transition);
+  border-left: 4px solid transparent; /* Placeholder for priority border */
 }
+
+/* --- TASK PRIORITY STYLES --- */
+.todo-list li.priority-high {
+  border-left-color: var(--priority-high-color);
+}
+.todo-list li.priority-medium {
+  border-left-color: var(--priority-medium-color);
+}
+.todo-list li.priority-low {
+  border-left-color: var(--priority-low-color);
+}
+/* --- END TASK PRIORITY STYLES --- */
+
 
 .todo-list li:hover {
   background: rgba(255, 255, 255, 0.15);
@@ -508,6 +656,7 @@ body {
   align-items: center;
   gap: 12px;
   flex: 1;
+  overflow: hidden; /* Prevent text overflow */
 }
 
 .task-checkbox {
@@ -515,12 +664,16 @@ body {
   height: 20px;
   border-radius: 4px;
   cursor: pointer;
-  accent-color: var(--accent);
+  accent-color: var(--accent); /* Use accent for checkbox */
+  flex-shrink: 0; /* Prevent checkbox from shrinking */
 }
 
 .task-text {
   font-size: 1rem;
   transition: var(--transition);
+  white-space: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Add ellipsis */
 }
 
 .task-content.completed .task-text {
@@ -535,11 +688,14 @@ body {
   cursor: pointer;
   opacity: 0.7;
   transition: var(--transition);
+  padding: 5px; /* Add some padding for easier clicking */
+  font-size: 1rem; /* Ensure icon size is consistent */
 }
 
 .delete-task:hover {
   opacity: 1;
-  color: #ff4444;
+  color: #ff4444; /* Consistent delete color */
+  transform: scale(1.1);
 }
 
 /* Modal Styles */
@@ -550,8 +706,8 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.6); /* Darker overlay */
+  backdrop-filter: blur(8px); /* Stronger blur */
   z-index: 1000;
 }
 
@@ -559,39 +715,63 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.3s ease forwards;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 
 .modal-content {
   background: var(--bg-color);
   backdrop-filter: blur(10px);
   border-radius: var(--border-radius);
-  padding: 24px;
+  padding: 30px; /* Increase padding */
   width: 90%;
   max-width: 500px;
   box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  animation: scaleUp 0.3s ease forwards; /* Add scaling animation */
 }
+
+@keyframes scaleUp {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  padding-bottom: 15px; /* Add padding */
+  border-bottom: 1px solid var(--border-color); /* Add separator */
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--accent); /* Use accent color */
 }
 
 .modal-close {
   background: transparent;
   border: none;
   color: var(--text-color);
-  font-size: 1.2rem;
+  font-size: 1.4rem; /* Larger close icon */
   cursor: pointer;
   opacity: 0.7;
   transition: var(--transition);
+  padding: 5px; /* Easier click target */
 }
 
 .modal-close:hover {
   opacity: 1;
-  transform: rotate(90deg);
+  transform: rotate(90deg) scale(1.1);
+  color: #ff4444; /* Red hover for close */
 }
 
 .form-group {
@@ -602,20 +782,190 @@ body {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
+  font-size: 0.9rem; /* Adjust label size */
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(23, 22, 22, 0.75);
+  background: var(--input-bg); /* Consistent input background */
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   color: var(--text-color);
   font-size: 1rem;
+  transition: var(--transition);
 }
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 5px var(--accent);
+}
+
 
 .icon-selector {
   display: flex;
   align-items: center;
-  gap:
+  gap: 15px; /* Increase gap */
+}
+
+.icon-selector select {
+    flex-grow: 1; /* Allow select to take available space */
+}
+
+#icon-preview {
+    font-size: 1.5rem; /* Larger icon preview */
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    min-width: 40px; /* Ensure minimum width */
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 15px; /* Space between buttons */
+    margin-top: 30px; /* Add space above buttons */
+}
+
+/* General Button Styles (can be reused) */
+.primary-button, .secondary-button {
+    padding: 10px 25px; /* Adjust padding */
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.primary-button {
+    background-color: var(--accent);
+    color: #000; /* Adjust contrast if needed */
+}
+[data-theme="minimalist"] .primary-button {
+    color: #fff; /* Ensure contrast */
+}
+
+
+.primary-button:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.secondary-button {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.secondary-button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px; /* Add gap for stacked items */
+  }
+  .theme-switcher {
+      top: calc(100% + 10px); /* Adjust position */
+      left: 0;
+      right: auto;
+      width: calc(100% - 40px); /* Adjust width */
+      margin: 0 20px; /* Center it */
+  }
+  .theme-grid {
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); /* Smaller buttons on mobile */
+  }
+
+  .quick-links-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Adjust for smaller screens */
+    gap: 15px;
+  }
+  .todo-list {
+      max-height: 250px; /* Adjust height on smaller screens */
+  }
+  .modal-content {
+      padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+    .search-wrapper {
+        flex-direction: column;
+        padding: 15px;
+        border-radius: var(--border-radius); /* Revert to standard radius */
+        gap: 10px;
+    }
+    .search-input {
+        width: 100%;
+    }
+    .search-button {
+        width: 100%;
+        margin-left: 0; /* Remove margin */
+    }
+    .quick-links-grid {
+        grid-template-columns: repeat(2, 1fr); /* Force 2 columns */
+    }
+    .theme-grid {
+      grid-template-columns: repeat(2, 1fr); /* Force 2 columns */
+    }
+    .modal-buttons {
+        flex-direction: column; /* Stack buttons */
+    }
+    .primary-button, .secondary-button {
+        width: 100%; /* Full width buttons */
+    }
+}
+
+
+/* Accessibility Enhancements */
+.modal {
+  visibility: hidden; /* Use visibility for better transition handling */
+  opacity: 0;
+  transition: visibility 0s linear 0.3s, opacity 0.3s ease;
+}
+.modal.active {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+/* Add focus styles for accessibility */
+a:focus, button:focus, input:focus, select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* Hide custom file input visually but keep accessible */
+.custom-bg-btn input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Style the label to look like a button */
+.custom-bg-btn {
+    cursor: pointer;
+}
+
+/* Dragging styles for quick links */
+.quick-link.dragging {
+    opacity: 0.5;
+    background: var(--accent);
+    border: 1px dashed #fff;
+}
