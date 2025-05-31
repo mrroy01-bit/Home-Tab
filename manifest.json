@@ -1,25 +1,62 @@
 {
-  "manifest_version": 2,
-  "name": "Modern Home Tab",
-  "version": "1.0",
-  "description": "A beautiful and modern new tab experience with customizable themes and productivity features.",
+  "manifest_version": 3,
+  "name": "Enhanced Home Tab",
+  "version": "2.0",
+  "description": "A beautiful, customizable new tab experience with themes, quick links, AI assistance, and productivity tools.",
   "icons": {
     "48": "icons/icon.svg",
     "128": "icons/icon.svg"
   },
-  "browser_action": {
-    "default_popup": "index.html",
-    "default_icon": "icons/icon.svg"
+  "action": {
+    "default_icon": {
+      "48": "icons/icon.svg",
+      "128": "icons/icon.svg"
+    }
   },
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
   "permissions": [
-    "activeTab",
-    "storage"
+    "storage",
+    "geolocation"
   ],
-  "background": {
-    "persistent": false,
-    "scripts": ["scripts.js"]
+  "host_permissions": [
+    "https://api.openweathermap.org/"
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+E",
+        "mac": "Command+E"
+      },
+      "description": "Focus search box"
+    },
+    "toggle_sidebar": {
+      "suggested_key": {
+        "default": "Alt+S"
+      },
+      "description": "Toggle sidebar"
+    },
+    "change_theme": {
+      "suggested_key": {
+        "default": "Alt+T"
+      },
+      "description": "Change theme"
+    },
+    "add_quick_link": {
+      "suggested_key": {
+        "default": "Alt+A"
+      },
+      "description": "Add new quick link"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*", "images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }

@@ -1,751 +1,1109 @@
-// --- Global Variables & Initial Data ---
-let todos = JSON.parse(localStorage.getItem('todos')) || [];
-let quickLinks = JSON.parse(localStorage.getItem('quickLinks')) || [
-  // Default quick links if none are stored
-  { name: 'ChatGPT', url: 'https://chat.openai.com', icon: 'fas fa-robot' },
-  { name: 'GitHub', url: 'https://github.com', icon: 'fab fa-github' },
-  { name: 'Gmail', url: 'https://mail.google.com', icon: 'fas fa-envelope' }, // Corrected Gmail URL
-  { name: 'YouTube', url: 'https://www.youtube.com', icon: 'fab fa-youtube' }, // Corrected YouTube URL
-  { name: 'Gemini', url: 'https://gemini.google.com', icon: 'fas fa-gem' },
-  { name: 'Amity', url: 'https://amigo.amityonline.com/login/index.php', icon: 'fas fa-university' }
-];
-let currentTheme = localStorage.getItem('selected-theme') || 'ocean'; // Default theme
-let customBackground = localStorage.getItem('custom-background') || null;
+const AppState = {
+  todos: [],
+  quickLinks: [],
+  settings: {
+      theme: 'ocean',
+      customBackground: null,
+      searchEngine: 'google',
+      taskSort: 'created',
+      currentTaskPriority: 'medium',
+      currentTaskCategory: 'general',
+      userName: '',
+      weatherLocation: '',
+      bgBlur: '5'
+  },
+  // Simplified search engine configuration
+  searchEngines: {
+      google: { name: 'Google', icon: 'fab fa-google', url: 'https://google.com/search', queryParam: 'q' },
+      bing: { name: 'Bing', icon: 'fab fa-microsoft', url: 'https://www.bing.com/search', queryParam: 'q' },
+      duckduckgo: { name: 'DuckDuckGo', icon: 'fab fa-duckduckgo', url: 'https://duckduckgo.com/', queryParam: 'q' }
+  },
+  // Available icons for quick links modal
+  quickLinkIcons: [
+      { value: 'fas fa-link', text: 'General Link' }, { value: 'fas fa-globe', text: 'Website' },
+      { value: 'fas fa-star', text: 'Favorite' }, { value: 'fas fa-folder', text: 'Folder' },
+      { value: 'fab fa-github', text: 'GitHub' }, { value: 'fab fa-gitlab', text: 'GitLab' },
+      { value: 'fab fa-google', text: 'Google' }, { value: 'fab fa-youtube', text: 'YouTube' },
+      { value: 'fab fa-twitter', text: 'Twitter / X' }, { value: 'fab fa-facebook', text: 'Facebook' },
+      { value: 'fab fa-instagram', text: 'Instagram' }, { value: 'fab fa-linkedin', text: 'LinkedIn' },
+      { value: 'fab fa-slack', text: 'Slack' }, { value: 'fab fa-figma', text: 'Figma' },
+      { value: 'fab fa-codepen', text: 'CodePen' }, { value: 'fas fa-envelope', text: 'Email' },
+      { value: 'fas fa-calendar', text: 'Calendar' }, { value: 'fas fa-book', text: 'Docs / Read' },
+      { value: 'fas fa-code', text: 'Code / Dev' }, { value: 'fas fa-cloud', text: 'Cloud / Drive' },
+      { value: 'fas fa-shopping-cart', text: 'Shopping' }, { value: 'fas fa-music', text: 'Music' },
+      { value: 'fas fa-video', text: 'Video / Stream' }, { value: 'fas fa-image', text: 'Photos / Images' },
+      { value: 'fas fa-file-alt', text: 'Documents' }, { value: 'fas fa-chart-bar', text: 'Analytics' },
+      { value: 'fas fa-cog', text: 'Settings' }, { value: 'fas fa-briefcase', text: 'Work' },
+      { value: 'fas fa-graduation-cap', text: 'School' }, { value: 'fas fa-gamepad', text: 'Games' }
+  ],
+  // Default quick links if none are loaded
+  defaultQuickLinks: [
+      { name: 'ChatGPT', url: 'https://chat.openai.com', icon: 'fas fa-robot', color: '#10a37f' },
+      { name: 'GitHub', url: 'https://github.com', icon: 'fab fa-github', color: '#333333' },
+      { name: 'Gmail', url: 'https://mail.google.com', icon: 'fas fa-envelope', color: '#ea4335' },
+      { name: 'YouTube', url: 'https://youtube.com', icon: 'fab fa-youtube', color: '#ff0000' },
+      { name: 'Gemini', url: 'https://gemini.google.com', icon: 'fas fa-gem', color: '#8e24aa' }
+  ],
+  domRefs: {}, 
+  draggedLinkElement: null,
+  weatherApiKey: '89ac0963d98ecf5cef698592b36e0300', // Sample key - replace with your own from OpenWeatherMap
+};
 
-// --- DOM Element References ---
-// Use const for elements that don't change, let for those that might (though most are static)
-const timeElement = document.getElementById('chatgpt-time');
-const themeToggleButton = document.getElementById('toggle-theme-switcher');
-const themeSwitcherPanel = document.getElementById('theme-switcher-panel');
-const themeButtons = document.querySelectorAll('.theme-btn'); // Select all theme buttons
-const customBgLabel = document.querySelector('.custom-bg-btn'); // Label for custom BG
-const bgUploadInput = document.getElementById('bg-upload');
-const searchInput = document.querySelector('.search-input');
-const quickLinksContainer = document.getElementById('quick-links');
-const todoList = document.getElementById('todo-list');
-const newTaskInput = document.getElementById('new-task');
-const addTaskButton = document.getElementById('add-task-btn');
-const refreshTasksButton = document.getElementById('refresh-tasks-btn');
-const addLinkModal = document.getElementById('add-link-modal');
-const addLinkForm = document.getElementById('add-link-form'); // Get the form itself
-const closeModalButton = document.getElementById('close-modal');
-const saveLinkButton = document.getElementById('save-link');
-const cancelLinkButton = document.getElementById('cancel-link');
-const linkNameInput = document.getElementById('link-name');
-const linkUrlInput = document.getElementById('link-url');
-const iconSelect = document.getElementById('icon-select');
-const iconPreview = document.getElementById('icon-preview');
+// --- DOM Element Caching ---
+function cacheDomReferences() {
+  AppState.domRefs = {
+      // Main Layout
+      htmlElement: document.documentElement,
+      bodyElement: document.body,
+      sidebarElement: document.getElementById('sidebar'),
+      sidebarToggle: document.getElementById('sidebar-toggle'),
+      closeSidebarBtn: document.getElementById('close-sidebar'),
+      
+      // Header & Theme
+      clock: document.getElementById('clock'),
+      date: document.getElementById('date'),
+      weatherDisplay: document.getElementById('temperature'),
+      themeColorMeta: document.querySelector('meta[name="theme-color"]'),
+      greeting: document.getElementById('greeting'),
+      motivation: document.getElementById('motivation'),
+      themeToggleBtn: document.getElementById('theme-toggle'),
+      themeOptions: document.querySelectorAll('.theme-option'),
+      
+      // Search
+      searchEngineButton: document.getElementById('search-engine-button'),
+      searchEngineIcon: document.getElementById('search-engine-icon'),
+      searchEngineDropdown: document.getElementById('search-engine-dropdown'),
+      searchEngineOptions: document.querySelectorAll('.search-engine-option'),
+      searchForm: document.getElementById('search-form'),
+      searchInput: document.getElementById('search-input'),
+      searchBtn: document.getElementById('search-btn'),
+      sendBtn: document.getElementById('send-btn'),
+      attachBtn: document.getElementById('attach-btn'),
+      voiceBtn: document.getElementById('voice-btn'),
+      chatContainer: document.getElementById('chat-container'),
 
-// --- Core Functions ---
+      // Quick Links
+      quickLinksGrid: document.getElementById('quick-links-grid'),
+      quickLinksList: document.querySelector('.quick-links-list'),
+      addLinkButtons: document.querySelectorAll('.add-quick-link'),
+      addLinkModal: document.getElementById('add-link-modal'),
+      addLinkForm: document.getElementById('add-link-form'),
+      closeLinkModalBtn: document.getElementById('close-link-modal'),
+      cancelLinkBtn: document.getElementById('cancel-link-btn'),
+      saveLinkBtn: document.getElementById('save-link-btn'),
+      linkNameInput: document.getElementById('link-name'),
+      linkUrlInput: document.getElementById('link-url'),
+      iconSelect: document.getElementById('icon-select'),
+      iconPreview: document.getElementById('icon-preview'),
+      linkColorInput: document.getElementById('link-color'),
+      modalTitle: document.getElementById('modal-title'),
 
-/**
- * Updates the time display in the header.
- */
-function updateTime() {
-  if (!timeElement) return; // Guard clause
-
-  const now = new Date();
-  // Options for formatting time (can be customized)
-  const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false }; // Use 24-hour format
-  const secondsOptions = { second: '2-digit'};
-
-  const formattedTime = now.toLocaleTimeString([], timeOptions);
-  const formattedSeconds = now.toLocaleTimeString([], secondsOptions);
-
-  // Update HTML structure for better semantics if needed, or keep simple spans
-  timeElement.innerHTML = `
-      <span class="time-hours-minutes">${formattedTime}</span>
-      <span class="time-seconds">:${formattedSeconds}</span>
-    `;
-}
-
-/**
- * Saves the current todos array to localStorage.
- */
-function saveTodos() {
-  localStorage.setItem('todos', JSON.stringify(todos));
-}
-
-/**
- * Saves the current quickLinks array to localStorage.
- */
-function saveQuickLinks() {
-  localStorage.setItem('quickLinks', JSON.stringify(quickLinks));
-}
-
-/**
- * Creates an HTML list item element for a given todo object.
- * @param {object} todo - The todo object.
- * @returns {HTMLLIElement} The created list item element.
- */
-function createTodoElement(todo) {
-  const li = document.createElement('li');
-  li.dataset.taskId = todo.id;
-  // Add priority class for styling
-  li.classList.add(`priority-${todo.priority || 'medium'}`); // Default to medium if no priority
-
-  const taskContentDiv = document.createElement('div');
-  taskContentDiv.className = 'task-content';
-  if (todo.completed) {
-    taskContentDiv.classList.add('completed');
-  }
-
-  const checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-  checkbox.className = 'task-checkbox';
-  checkbox.checked = todo.completed;
-  checkbox.setAttribute('aria-labelledby', `task-text-${todo.id}`); // Accessibility link
-
-  const span = document.createElement('span');
-  span.className = 'task-text';
-  span.textContent = todo.text;
-  span.id = `task-text-${todo.id}`; // ID for aria-labelledby
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'delete-task';
-  deleteBtn.title = `Delete Task: ${todo.text}`; // More descriptive title
-  deleteBtn.setAttribute('aria-label', `Delete task: ${todo.text}`); // Accessibility
-  deleteBtn.innerHTML = '<i class="fas fa-trash" aria-hidden="true"></i>'; // Hide icon from screen readers
-
-  // Assemble the task content
-  taskContentDiv.appendChild(checkbox);
-  taskContentDiv.appendChild(span);
-
-  // Assemble the list item
-  li.appendChild(taskContentDiv);
-  li.appendChild(deleteBtn);
-
-  // Add event listeners directly here
-  checkbox.addEventListener('change', handleTodoCheckboxChange);
-  deleteBtn.addEventListener('click', handleTodoDelete);
-
-  return li;
-}
-
-/**
- * Loads todos from the 'todos' array into the DOM.
- */
-function loadTodos() {
-  if (!todoList) return; // Guard clause
-
-  todoList.innerHTML = ''; // Clear existing list
-  if (todos.length === 0) {
-      // Optional: Display a message when there are no tasks
-      const emptyMessage = document.createElement('li');
-      emptyMessage.textContent = "No tasks yet. Add one above!";
-      emptyMessage.style.textAlign = 'center';
-      emptyMessage.style.opacity = '0.7';
-      emptyMessage.style.padding = '15px 0';
-      todoList.appendChild(emptyMessage);
-  } else {
-      todos.forEach(todo => {
-          todoList.appendChild(createTodoElement(todo));
-      });
-  }
-  // Note: Event listeners are now added within createTodoElement,
-  // so attachTodoEventListeners() is no longer needed here.
-}
-
-/**
- * Adds a new task based on the input field value.
- */
-function addTask() {
-  if (!newTaskInput) return;
-  const text = newTaskInput.value.trim();
-  if (!text) {
-      // Optional: Add visual feedback for empty input
-      newTaskInput.style.borderColor = 'red';
-      setTimeout(() => { newTaskInput.style.borderColor = ''; }, 1500);
-      return;
-  }
-
-  // Prompt for priority - consider a dropdown or buttons in the UI later for better UX
-  const priorityInput = window.prompt('Set priority (high, medium, low):', 'medium');
-  // Validate priority input
-  const validPriorities = ['high', 'medium', 'low'];
-  const priority = validPriorities.includes(priorityInput?.toLowerCase()) ? priorityInput.toLowerCase() : 'medium';
-
-  const newTask = {
-    id: Date.now(), // Simple unique ID
-    text,
-    priority: priority,
-    completed: false,
-    created: new Date().toISOString() // Store creation date
+      // Settings
+      settingsBtn: document.getElementById('settings-btn'),
+      settingsModal: document.getElementById('settings-modal'),
+      closeSettingsModalBtn: document.getElementById('close-settings-modal'),
+      customBgUpload: document.getElementById('custom-bg-upload'),
+      customBgBtn: document.getElementById('custom-bg-btn'),
+      resetBgBtn: document.getElementById('reset-bg-btn'),
+      blurAmount: document.getElementById('blur-amount'),
+      blurValue: document.getElementById('blur-value'),
+      userNameInput: document.getElementById('user-name'),
+      weatherLocationInput: document.getElementById('weather-location'),
+      resetSettingsBtn: document.getElementById('reset-settings-btn'),
+      saveSettingsBtn: document.getElementById('save-settings-btn'),
   };
-
-  todos.push(newTask); // Add to the beginning or end? Push adds to end. Unshift adds to beginning.
-  // todos.unshift(newTask); // Add to the top of the list
-  saveTodos();
-  loadTodos(); // Reload the list in the DOM
-  newTaskInput.value = ''; // Clear the input field
-  newTaskInput.focus(); // Keep focus on input for adding multiple tasks
-}
-
-/**
- * Creates an HTML anchor element for a given quick link object.
- * @param {object} link - The quick link object { name, url, icon }.
- * @returns {HTMLAnchorElement | HTMLButtonElement} The created anchor or button element.
- */
-function createQuickLinkElement(link) {
-    // Handle the special "Add Link" case
-    if (link.isAddButton) {
-        const addButton = document.createElement('button');
-        addButton.id = 'add-quick-link';
-        addButton.className = 'quick-link add-link'; // Use specific class
-        addButton.setAttribute('aria-label', 'Add new quick link');
-        addButton.innerHTML = `
-          <div class="quick-link-content">
-            <i class="fas fa-plus" aria-hidden="true"></i>
-            <span>Add Link</span>
-          </div>
-        `;
-        addButton.addEventListener('click', showAddLinkModal);
-        return addButton;
+  
+  // Log any missing DOM references to help with debugging
+  for (const [key, value] of Object.entries(AppState.domRefs)) {
+    if (!value && key !== 'draggedLinkElement') {
+      console.warn(`Missing DOM reference: ${key}`);
     }
-
-    // Regular quick link element
-    const element = document.createElement('a');
-    element.href = link.url;
-    element.className = 'quick-link';
-    element.target = '_blank'; // Open in new tab
-    element.rel = 'noopener noreferrer'; // Security best practice
-    element.setAttribute('draggable', 'true'); // Make draggable
-    element.dataset.linkUrl = link.url; // Store URL for identification
-
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'quick-link-content';
-
-    const icon = document.createElement('i');
-    // Add error handling for icon classes if necessary
-    icon.className = link.icon || 'fas fa-link'; // Default icon
-    icon.setAttribute('aria-hidden', 'true'); // Hide decorative icon
-
-    const span = document.createElement('span');
-    span.textContent = link.name;
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'delete-link';
-    deleteBtn.title = `Delete ${link.name}`;
-    deleteBtn.setAttribute('aria-label', `Delete quick link: ${link.name}`);
-    deleteBtn.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
-    deleteBtn.dataset.linkUrl = link.url; // Store URL for deletion reference
-
-    // Assemble the content
-    contentDiv.appendChild(icon);
-    contentDiv.appendChild(span);
-
-    // Assemble the link element
-    element.appendChild(contentDiv);
-    element.appendChild(deleteBtn);
-
-    // Attach delete event listener directly
-    deleteBtn.addEventListener('click', handleQuickLinkDelete);
-
-    return element;
-}
-
-/**
- * Loads quick links into the grid and adds the "Add Link" button.
- */
-function loadQuickLinks() {
-  if (!quickLinksContainer) return; // Guard clause
-
-  quickLinksContainer.innerHTML = ''; // Clear existing links
-
-  // Add existing links
-  quickLinks.forEach(link => {
-    quickLinksContainer.appendChild(createQuickLinkElement(link));
-  });
-
-  // Add the "Add Link" button object and create its element
-  quickLinksContainer.appendChild(createQuickLinkElement({ isAddButton: true }));
-
-  // Re-attach drag and drop listeners if needed (or ensure they are attached to the container)
-  // Event listeners for drag/drop are added to the container in DOMContentLoaded
-}
-
-
-/**
- * Shows the Add/Edit Link Modal. Resets the form for adding.
- */
-function showAddLinkModal() {
-  if (!addLinkModal) return;
-  // Reset form for adding a new link
-  addLinkForm.reset(); // Resets form fields
-  updateIconPreview(); // Update preview to default
-  document.getElementById('modal-title').textContent = 'Add Quick Link'; // Set title
-  saveLinkButton.textContent = 'Save Link'; // Set button text
-  addLinkModal.setAttribute('aria-hidden', 'false'); // Show modal
-  addLinkModal.classList.add('active');
-  linkNameInput.focus(); // Focus on the first input field
-}
-
-/**
- * Hides the Add/Edit Link Modal.
- */
-function hideAddLinkModal() {
-  if (!addLinkModal) return;
-  addLinkModal.setAttribute('aria-hidden', 'true'); // Hide modal
-  addLinkModal.classList.remove('active');
-}
-
-/**
- * Handles the submission of the Add/Edit Link form.
- * @param {Event} event - The form submission event.
- */
-function handleAddEditLinkSubmit(event) {
-  event.preventDefault(); // Prevent default form submission
-  const name = linkNameInput.value.trim();
-  const url = linkUrlInput.value.trim();
-  const icon = iconSelect.value;
-
-  if (name && url) {
-    // Basic URL validation (starts with http or https)
-    let fullUrl = url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        fullUrl = `https://${url}`; // Assume https if no protocol
-    }
-
-    const newLink = { name, url: fullUrl, icon };
-    quickLinks.push(newLink); // Add the new link
-    saveQuickLinks();
-    loadQuickLinks(); // Reload the grid
-    hideAddLinkModal(); // Close the modal
-  } else {
-      // Optional: Add validation feedback to the user
-      if (!name) linkNameInput.focus();
-      else if (!url) linkUrlInput.focus();
   }
 }
 
-/**
- * Updates the icon preview in the modal based on the selected value.
- */
-function updateIconPreview() {
-  if (iconSelect && iconPreview) {
-    iconPreview.innerHTML = `<i class="${iconSelect.value}" aria-hidden="true"></i>`;
-  }
-}
+// --- Data Persistence (LocalStorage) ---
 
-/**
- * Sets the active theme on the document and saves it.
- * @param {string} theme - The name of the theme to activate (e.g., "ocean", "custom").
- */
-function setActiveTheme(theme) {
-  const htmlElement = document.documentElement;
-
-  // Remove previous theme attribute
-  htmlElement.removeAttribute('data-theme');
-
-  if (theme === 'custom' && customBackground) {
-    // Apply custom background if theme is 'custom' and an image exists
-    document.body.style.backgroundImage = `url(${customBackground})`;
-    // Optionally remove gradient overlay for custom BG, or keep it:
-    // document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url(${customBackground})`;
-    htmlElement.setAttribute('data-theme', 'custom'); // Still set attribute for potential specific custom styles
-  } else {
-    // Apply predefined theme
-    document.body.style.backgroundImage = ''; // Clear direct background image style
-    htmlElement.setAttribute('data-theme', theme);
+/** Loads data (links, settings) from localStorage */
+function loadData() {
+  try {
+      const storedLinks = localStorage.getItem('app_quickLinks');
+      AppState.quickLinks = storedLinks ? JSON.parse(storedLinks) : [...AppState.defaultQuickLinks]; // Use default if none stored
+  } catch (e) {
+      console.error("Error loading quick links:", e);
+      AppState.quickLinks = [...AppState.defaultQuickLinks];
   }
 
-  // Update active state on buttons
-  themeButtons.forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-theme') === theme);
-  });
-  // Ensure custom background label doesn't show active unless theme is 'custom'
-  customBgLabel?.classList.toggle('active', theme === 'custom');
-
-
-  localStorage.setItem('selected-theme', theme);
-  currentTheme = theme; // Update global variable
-
-  // Update meta theme color for browser UI consistency
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-  if (themeColorMeta) {
-      // Get the computed background color (might be complex with gradients)
-      // A simpler approach is to define a --theme-color variable per theme
-      // For now, use a default or fetch a specific variable if defined
-      // Example: const color = getComputedStyle(htmlElement).getPropertyValue('--accent');
-      // themeColorMeta.setAttribute('content', color);
-      // Or set a fixed color based on theme:
-      const colors = { ocean: '#1a4f60', sunset: '#ff6f61', forest: '#22592e', /* ... add others */ minimalist: '#f5f5f5', cityscape: '#191970'};
-      themeColorMeta.setAttribute('content', colors[theme] || '#1a4f60'); // Default if theme not in map
-  }
-}
-
-
-/**
- * Applies a custom background image from base64 data.
- * @param {string} backgroundData - Base64 encoded image data.
- */
-function applyCustomBackground(backgroundData) {
-  customBackground = backgroundData; // Store globally
-  localStorage.setItem('custom-background', backgroundData); // Save to localStorage
-  setActiveTheme('custom'); // Activate the custom theme setting
-}
-
-// --- Event Handlers ---
-
-/**
- * Handles clicks on the theme toggle button.
- */
-function handleThemeToggleClick(event) {
-    event.stopPropagation(); // Prevent click from closing the panel immediately
-    const isExpanded = themeSwitcherPanel.classList.toggle('active');
-    themeToggleButton.setAttribute('aria-expanded', isExpanded); // Update ARIA state
-}
-
-/**
- * Handles clicks outside the theme switcher to close it.
- * @param {Event} event - The click event.
- */
-function handleDocumentClick(event) {
-    if (themeSwitcherPanel && themeSwitcherPanel.classList.contains('active') &&
-        !themeSwitcherPanel.contains(event.target) && event.target !== themeToggleButton) {
-        themeSwitcherPanel.classList.remove('active');
-        themeToggleButton.setAttribute('aria-expanded', 'false'); // Update ARIA state
-    }
-}
-
-
-/**
- * Handles clicks on predefined theme buttons.
- * @param {Event} event - The click event.
- */
-function handleThemeButtonClick(event) {
-    // Use currentTarget to ensure it's the button the listener was attached to
-    const theme = event.currentTarget.getAttribute('data-theme');
-    if (theme) {
-        setActiveTheme(theme);
-        // Optional: Close the theme switcher after selection
-        // themeSwitcherPanel.classList.remove('active');
-        // themeToggleButton.setAttribute('aria-expanded', 'false');
-    }
-}
-
-/**
- * Handles the change event for the background image upload input.
- * @param {Event} event - The change event.
- */
-function handleBackgroundUpload(event) {
-  const file = event.target.files[0];
-  if (file && file.type.startsWith('image/')) { // Basic validation
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      try {
-          applyCustomBackground(e.target.result);
-      } catch (error) {
-          console.error("Error applying custom background:", error);
-          // Optionally inform the user
-          alert("Could not apply custom background. The file might be corrupted or too large.");
+  try {
+      const storedSettings = localStorage.getItem('app_settings');
+      if (storedSettings) {
+          const parsedSettings = JSON.parse(storedSettings);
+          // Merge stored settings with defaults to handle missing keys
+          AppState.settings = { ...AppState.settings, ...parsedSettings };
       }
-    };
-    reader.onerror = function() {
-        console.error("Error reading file:", reader.error);
-        alert("Could not read the selected file.");
-    };
-    reader.readAsDataURL(file); // Read file as Base64
-  } else if (file) {
-      alert("Please select a valid image file (e.g., JPG, PNG, GIF).");
+      // Ensure essential settings have defaults if missing entirely
+      AppState.settings.theme = AppState.settings.theme || 'ocean';
+      AppState.settings.searchEngine = AppState.settings.searchEngine || 'google';
+
+  } catch (e) {
+      console.error("Error loading settings:", e);
+      // Keep default settings if loading fails
+  }
+  console.log("Data loaded:", { quickLinks: AppState.quickLinks, settings: AppState.settings });
+}
+
+/** Saves the entire AppState (or specific parts) to localStorage */
+function saveData(part = 'all') {
+  try {
+      if (part === 'all' || part === 'quickLinks') {
+          localStorage.setItem('app_quickLinks', JSON.stringify(AppState.quickLinks));
+      }
+      if (part === 'all' || part === 'settings') {
+          localStorage.setItem('app_settings', JSON.stringify(AppState.settings));
+      }
+  } catch (e) {
+      console.error("Error saving data to localStorage:", e);
   }
 }
 
-/**
- * Handles the Enter key press in the new task input field.
- * @param {KeyboardEvent} event - The keypress event.
- */
-function handleNewTaskKeyPress(event) {
-  if (event.key === 'Enter') {
-    addTask();
+// --- Theme Management ---
+
+/** Updates the UI to match the current theme */
+function applyTheme(themeName) {
+  const { htmlElement, themeColorMeta } = AppState.domRefs;
+  
+  // Set the theme attribute on html
+  htmlElement.setAttribute('data-theme', themeName);
+  
+  // Update theme meta tag color
+  let themeColor = '#1a4f60'; // Default ocean color
+  
+  // Set the correct theme color for system UI based on theme
+  switch(themeName) {
+    case 'light': themeColor = '#f5f5f5'; break;
+    case 'dark': themeColor = '#121212'; break;
+    case 'forest': themeColor = '#22592e'; break;
+    case 'sunset': themeColor = '#ff6f61'; break;
+    case 'midnight': themeColor = '#2c3e50'; break;
+    case 'ocean': default: themeColor = '#1a4f60'; break;
   }
-}
-
-/**
- * Handles changes to a todo item's checkbox.
- * @param {Event} event - The change event from the checkbox.
- */
-function handleTodoCheckboxChange(event) {
-    const checkbox = event.currentTarget;
-    const li = checkbox.closest('li'); // Find the parent list item
-    const taskId = li?.dataset.taskId; // Get the task ID
-
-    if (taskId) {
-        const todo = todos.find(t => t.id == taskId); // Find the corresponding todo object (use == for type coercion if IDs are mixed)
-        if (todo) {
-            todo.completed = checkbox.checked; // Update the completed status
-            saveTodos(); // Save the updated todos array
-            // Toggle completed class on the task content container
-            li.querySelector('.task-content')?.classList.toggle('completed', checkbox.checked);
-        } else {
-            console.error("Could not find todo with ID:", taskId);
-        }
-    } else {
-        console.error("Could not find task ID for checkbox:", checkbox);
-    }
-}
-
-/**
- * Handles clicks on a todo item's delete button.
- * @param {Event} event - The click event from the delete button.
- */
-function handleTodoDelete(event) {
-    const deleteButton = event.currentTarget;
-    const li = deleteButton.closest('li'); // Find the parent list item
-    const taskId = li?.dataset.taskId; // Get the task ID
-
-    if (taskId) {
-        // Optional: Confirmation dialog
-        // if (!confirm(`Are you sure you want to delete the task: "${li.querySelector('.task-text')?.textContent}"?`)) {
-        //     return;
-        // }
-
-        // Filter out the todo item to be deleted
-        todos = todos.filter(t => t.id != taskId); // Use != for type coercion
-        saveTodos(); // Save the updated array
-
-        // Remove the list item from the DOM with an animation
-        li.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        li.style.opacity = '0';
-        li.style.transform = 'translateX(-20px)';
-        setTimeout(() => {
-            li.remove();
-            // Check if the list is now empty and show message if needed
-            if (todos.length === 0) {
-                loadTodos(); // Reload to show the empty message
-            }
-        }, 300); // Wait for animation to finish
-
-    } else {
-        console.error("Could not find task ID for delete button:", deleteButton);
-    }
-}
-
-
-/**
- * Handles clicks on a quick link's delete button.
- * @param {Event} event - The click event.
- */
-function handleQuickLinkDelete(event) {
-    event.preventDefault(); // Prevent navigation if the click bubbles to the anchor
-    event.stopPropagation(); // Stop propagation to the anchor's drag/click listeners
-
-    const deleteButton = event.currentTarget;
-    const linkUrlToDelete = deleteButton.dataset.linkUrl; // Get URL from data attribute
-
-    if (linkUrlToDelete) {
-         // Optional: Confirmation
-        // const linkName = deleteButton.closest('.quick-link').querySelector('span')?.textContent || 'this link';
-        // if (!confirm(`Are you sure you want to delete ${linkName}?`)) {
-        //     return;
-        // }
-
-        quickLinks = quickLinks.filter(link => link.url !== linkUrlToDelete);
-        saveQuickLinks();
-        loadQuickLinks(); // Reload the grid
-    } else {
-        console.error("Could not find link URL to delete for button:", deleteButton);
-    }
-}
-
-/**
- * Handles keyboard shortcuts.
- * @param {KeyboardEvent} event - The keydown event.
- */
-function handleKeyDown(event) {
-    // Ctrl + / or Cmd + / to focus search
-    if ((event.ctrlKey || event.metaKey) && event.key === '/') {
-        event.preventDefault();
-        searchInput?.focus();
-    }
-    // Ctrl + N or Cmd + N to focus new task input
-    if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
-        event.preventDefault();
-        newTaskInput?.focus();
-    }
-    // Ctrl + T or Cmd + T to toggle theme switcher
-    if ((event.ctrlKey || event.metaKey) && event.key === 't') {
-        event.preventDefault();
-        handleThemeToggleClick(event); // Reuse toggle handler logic
-    }
-    // Escape key to close modal or theme switcher
-    if (event.key === 'Escape') {
-        if (addLinkModal && addLinkModal.classList.contains('active')) {
-            hideAddLinkModal();
-        } else if (themeSwitcherPanel && themeSwitcherPanel.classList.contains('active')) {
-            themeSwitcherPanel.classList.remove('active');
-            themeToggleButton.setAttribute('aria-expanded', 'false');
-        }
-    }
-}
-
-// --- Drag and Drop for Quick Links ---
-let draggingElement = null;
-
-function handleDragStart(e) {
-    // Only allow dragging actual links, not the 'add' button
-    if (e.target.classList.contains('quick-link') && !e.target.classList.contains('add-link')) {
-        draggingElement = e.target;
-        // Use setTimeout to allow the browser to render the drag image before adding class
-        setTimeout(() => e.target.classList.add('dragging'), 0);
-        e.dataTransfer.effectAllowed = 'move';
-        // Optional: Set data being dragged (e.g., the link URL)
-        // e.dataTransfer.setData('text/plain', e.target.dataset.linkUrl);
-    } else {
-        e.preventDefault(); // Prevent dragging the 'add' button
-    }
-}
-
-function handleDragEnd(e) {
-    if (draggingElement) {
-        draggingElement.classList.remove('dragging');
-        draggingElement = null;
-
-        // Update the order in the quickLinks array based on DOM order
-        const updatedLinksOrder = [];
-        quickLinksContainer.querySelectorAll('.quick-link:not(.add-link)').forEach(linkElement => {
-            const url = linkElement.dataset.linkUrl;
-            const foundLink = quickLinks.find(link => link.url === url);
-            if (foundLink) {
-                updatedLinksOrder.push(foundLink);
-            }
-        });
-        quickLinks = updatedLinksOrder;
-        saveQuickLinks(); // Save the new order
-    }
-}
-
-function handleDragOver(e) {
-    e.preventDefault(); // Necessary to allow dropping
-    e.dataTransfer.dropEffect = 'move';
-
-    const container = quickLinksContainer;
-    const afterElement = getDragAfterElement(container, e.clientY);
-    const draggable = document.querySelector('.dragging');
-
-    if (draggable) { // Ensure we have a draggable element
-        if (afterElement == null) {
-            // Append if dragging past the end (but before the 'add' button if it exists)
-            const addButton = container.querySelector('.add-link');
-            if (addButton) {
-                container.insertBefore(draggable, addButton);
-            } else {
-                container.appendChild(draggable);
-            }
-        } else {
-            // Insert before the element we are hovering over
-            container.insertBefore(draggable, afterElement);
-        }
-    }
-}
-
-function getDragAfterElement(container, y) {
-    // Get all draggable elements *except* the one being dragged and the 'add' button
-    const draggableElements = [...container.querySelectorAll('.quick-link:not(.dragging):not(.add-link)')];
-
-    return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        // Calculate vertical midpoint of the element
-        const offset = y - box.top - box.height / 2;
-        // We want the element *below* the cursor (negative offset)
-        // that is closest to the cursor (largest negative offset)
-        if (offset < 0 && offset > closest.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closest;
-        }
-    }, { offset: Number.NEGATIVE_INFINITY }).element; // Initial closest offset is negative infinity
-}
-
-
-// --- Initialization ---
-document.addEventListener('DOMContentLoaded', () => {
-  // Initial setup
-  updateTime();
-  setInterval(updateTime, 1000); // Update time every second
-
-  // Apply saved theme/background on load
-  if (currentTheme === 'custom' && customBackground) {
-      applyCustomBackground(customBackground);
-  } else {
-      setActiveTheme(currentTheme); // Apply saved or default theme
+  
+  if (themeColorMeta) {
+    themeColorMeta.content = themeColor;
   }
-
-  loadTodos();
-  loadQuickLinks();
-
-  // --- Attach Event Listeners ---
-
-  // Theme Switcher
-  if (themeToggleButton && themeSwitcherPanel) {
-    themeToggleButton.addEventListener('click', handleThemeToggleClick);
-    document.addEventListener('click', handleDocumentClick); // Close on outside click
-  }
-  themeButtons.forEach(button => {
-    button.addEventListener('click', handleThemeButtonClick);
-    // Optional: Preview on hover (can be complex with background images)
-    // button.addEventListener('mouseenter', () => { /* ... */ });
-    // button.addEventListener('mouseleave', () => { /* ... */ });
+  
+  // Update active class on theme options
+  document.querySelectorAll('.theme-option').forEach(button => {
+    if (button.getAttribute('data-theme') === themeName) {
+      button.classList.add('active');
+    } else {
+      button.classList.remove('active');
+    }
   });
+  
+  // Save theme in settings
+  AppState.settings.theme = themeName;
+  saveData('settings');
+}
 
-  // Custom Background
-  if (bgUploadInput) {
-    bgUploadInput.addEventListener('change', handleBackgroundUpload);
-  }
-
-  // Todo Input & Add Button
-  if (newTaskInput) {
-    newTaskInput.addEventListener('keypress', handleNewTaskKeyPress);
-  }
-  if (addTaskButton) {
-    addTaskButton.addEventListener('click', addTask);
-  }
-  // Refresh Button (if functionality is desired beyond initial load)
-  if (refreshTasksButton) {
-      refreshTasksButton.addEventListener('click', () => {
-          // Add a visual cue for refreshing
-          refreshTasksButton.classList.add('refreshing');
-          refreshTasksButton.disabled = true;
-          setTimeout(() => {
-              loadTodos(); // Reload tasks
-              refreshTasksButton.classList.remove('refreshing');
-              refreshTasksButton.disabled = false;
-          }, 500); // Simulate loading
+/** Sets up the theme switcher functionality */
+function setupThemeSwitcher() {
+  const { themeOptions, themeToggleBtn } = AppState.domRefs;
+  
+  // Apply the saved theme on load
+  applyTheme(AppState.settings.theme);
+  
+  // Set up theme option buttons
+  if (themeOptions) {
+    themeOptions.forEach(button => {
+      button.addEventListener('click', () => {
+        const themeName = button.getAttribute('data-theme');
+        if (themeName) {
+          applyTheme(themeName);
+        }
       });
+    });
   }
+  
+  // Set up theme toggle button
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      const themes = ['light', 'dark', 'ocean', 'forest', 'sunset', 'midnight'];
+      const currentThemeIndex = themes.indexOf(AppState.settings.theme);
+      const nextThemeIndex = (currentThemeIndex + 1) % themes.length;
+      applyTheme(themes[nextThemeIndex]);
+    });
+  }
+}
 
+// --- Time & Date Management ---
 
-  // Add/Edit Link Modal
-  if (addLinkForm) {
-    addLinkForm.addEventListener('submit', handleAddEditLinkSubmit);
+/** Updates the clock and date displays */
+function updateTimeAndDate() {
+  const { clock, date } = AppState.domRefs;
+  
+  if (!clock || !date) return;
+  
+  const now = new Date();
+  
+  // Update clock display
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  clock.textContent = `${hours}:${minutes}`;
+  
+  // Update date display
+  const options = { weekday: 'long', month: 'long', day: 'numeric' };
+  date.textContent = now.toLocaleDateString(undefined, options);
+  
+  // Update greeting based on time of day
+  updateGreeting(now.getHours());
+}
+
+/** Updates the greeting message based on time of day */
+function updateGreeting(hour) {
+  const { greeting } = AppState.domRefs;
+  
+  if (!greeting) return;
+  
+  let greetingText = 'Hello';
+  
+  if (hour < 12) {
+    greetingText = 'Good morning';
+  } else if (hour < 18) {
+    greetingText = 'Good afternoon';
+  } else {
+    greetingText = 'Good evening';
   }
-  if (closeModalButton) {
-    closeModalButton.addEventListener('click', hideAddLinkModal);
+  
+  // Add user name if available
+  const userName = AppState.settings.userName;
+  if (userName) {
+    greetingText += `, ${userName}`;
   }
-  if (cancelLinkButton) {
-    cancelLinkButton.addEventListener('click', hideAddLinkModal);
+  
+  greeting.textContent = greetingText;
+}
+
+// --- Weather Management ---
+
+/** Fetches weather data for the configured location */
+async function fetchWeather() {
+  const { weatherDisplay } = AppState.domRefs;
+  
+  if (!weatherDisplay) return;
+  
+  try {
+    const location = AppState.settings.weatherLocation || 'auto:ip'; // Default to IP-based location
+    const apiKey = AppState.weatherApiKey;
+    
+    // Handle default case with browser geolocation
+    if (location === 'auto:ip' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${apiKey}`);
+        const data = await response.json();
+        updateWeatherDisplay(data);
+      }, (error) => {
+        console.error('Geolocation error:', error);
+        weatherDisplay.textContent = '--°';
+      });
+    } else {
+      // Use specified location
+      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&units=metric&appid=${apiKey}`);
+      const data = await response.json();
+      updateWeatherDisplay(data);
+    }
+  } catch (error) {
+    console.error('Weather fetch error:', error);
+    weatherDisplay.textContent = '--°';
   }
-  if (iconSelect) {
-    iconSelect.addEventListener('change', updateIconPreview);
+}
+
+/** Updates the weather display with fetched data */
+function updateWeatherDisplay(data) {
+  const { weatherDisplay } = AppState.domRefs;
+  
+  if (!weatherDisplay || !data || !data.main) return;
+  
+  const temp = Math.round(data.main.temp);
+  weatherDisplay.textContent = `${temp}°C`;
+  
+  // Update weather icon
+  const weatherIcon = document.querySelector('#weather i');
+  if (weatherIcon) {
+    const weatherCode = data.weather[0].id;
+    let iconClass = 'fas fa-cloud'; // Default icon
+    
+    // Map weather codes to Font Awesome icons
+    if (weatherCode >= 200 && weatherCode < 300) {
+      iconClass = 'fas fa-bolt'; // Thunderstorm
+    } else if (weatherCode >= 300 && weatherCode < 400) {
+      iconClass = 'fas fa-cloud-rain'; // Drizzle
+    } else if (weatherCode >= 500 && weatherCode < 600) {
+      iconClass = 'fas fa-cloud-showers-heavy'; // Rain
+    } else if (weatherCode >= 600 && weatherCode < 700) {
+      iconClass = 'fas fa-snowflake'; // Snow
+    } else if (weatherCode >= 700 && weatherCode < 800) {
+      iconClass = 'fas fa-smog'; // Atmosphere (fog, etc.)
+    } else if (weatherCode === 800) {
+      iconClass = 'fas fa-sun'; // Clear sky
+    } else if (weatherCode > 800) {
+      iconClass = 'fas fa-cloud-sun'; // Clouds
+    }
+    
+    // Remove all icon classes and add the correct one
+    weatherIcon.className = '';
+    weatherIcon.classList.add(...iconClass.split(' '));
   }
-  // Close modal on background click
-  if (addLinkModal) {
-    addLinkModal.addEventListener('click', (e) => {
-      if (e.target === addLinkModal) { // Check if the click was directly on the modal background
-        hideAddLinkModal();
+}
+
+// --- Search Functionality ---
+
+/** Sets up the search functionality */
+function setupSearch() {
+  const { 
+    searchEngineButton, searchEngineDropdown, searchEngineOptions, 
+    searchEngineIcon, searchForm, searchInput, searchBtn, sendBtn 
+  } = AppState.domRefs;
+  
+  // Update search engine display
+  updateSearchEngineDisplay();
+  
+  // Toggle search engine dropdown
+  if (searchEngineButton && searchEngineDropdown) {
+    searchEngineButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      searchEngineDropdown.classList.toggle('active');
+      e.stopPropagation();
+    });
+    
+    // Close dropdown when clicking elsewhere
+    document.addEventListener('click', () => {
+      searchEngineDropdown.classList.remove('active');
+    });
+  }
+  
+  // Search engine selection
+  if (searchEngineOptions) {
+    searchEngineOptions.forEach(option => {
+      option.addEventListener('click', (e) => {
+        const engine = option.getAttribute('data-engine');
+        if (engine) {
+          AppState.settings.searchEngine = engine;
+          saveData('settings');
+          updateSearchEngineDisplay();
+          searchEngineDropdown.classList.remove('active');
+        }
+      });
+    });
+  }
+  
+  // Handle search form submission
+  if (searchForm) {
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      performSearch();
+    });
+  }
+  
+  // Search button click
+  if (searchBtn) {
+    searchBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      performSearch();
+    });
+  }
+  
+  // Send button for AI query
+  if (sendBtn) {
+    sendBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleAIQuery();
+    });
+  }
+}
+
+/** Updates the search engine icon and tooltip */
+function updateSearchEngineDisplay() {
+  const { searchEngineIcon } = AppState.domRefs;
+  
+  if (!searchEngineIcon) return;
+  
+  const engine = AppState.settings.searchEngine;
+  const engineData = AppState.searchEngines[engine];
+  
+  if (engineData) {
+    searchEngineIcon.className = engineData.icon;
+    searchEngineIcon.setAttribute('title', engineData.name);
+    
+    // Also update active state in dropdown
+    document.querySelectorAll('.search-engine-option').forEach(option => {
+      if (option.getAttribute('data-engine') === engine) {
+        option.classList.add('active');
+      } else {
+        option.classList.remove('active');
       }
     });
   }
+}
 
-  // Keyboard Shortcuts
-  document.addEventListener('keydown', handleKeyDown);
-
-  // Drag and Drop for Quick Links (Listeners on the container)
-  if (quickLinksContainer) {
-      quickLinksContainer.addEventListener('dragstart', handleDragStart);
-      quickLinksContainer.addEventListener('dragend', handleDragEnd);
-      quickLinksContainer.addEventListener('dragover', handleDragOver);
-      // 'drop' event is implicitly handled by dragend saving the order
+/** Performs a web search using the selected search engine */
+function performSearch() {
+  const { searchInput } = AppState.domRefs;
+  
+  if (!searchInput || !searchInput.value.trim()) return;
+  
+  const engine = AppState.settings.searchEngine;
+  const engineData = AppState.searchEngines[engine];
+  
+  if (engineData) {
+    const searchTerm = encodeURIComponent(searchInput.value.trim());
+    const searchUrl = `${engineData.url}?${engineData.queryParam}=${searchTerm}`;
+    window.open(searchUrl, '_blank');
   }
+}
 
-}); // End DOMContentLoaded
+/** Handles AI query submission */
+function handleAIQuery() {
+  const { searchInput, chatContainer } = AppState.domRefs;
+  
+  if (!searchInput || !chatContainer || !searchInput.value.trim()) return;
+  
+  // Get user's query
+  const query = searchInput.value.trim();
+  
+  // Create user message element
+  const userMessage = document.createElement('div');
+  userMessage.className = 'chat-message user-message';
+  userMessage.innerHTML = `
+    <div class="message-avatar">
+      <i class="fas fa-user"></i>
+    </div>
+    <div class="message-content">
+      <p>${query}</p>
+    </div>
+  `;
+  
+  // Create AI response (placeholder)
+  const aiMessage = document.createElement('div');
+  aiMessage.className = 'chat-message ai-message';
+  aiMessage.innerHTML = `
+    <div class="message-avatar">
+      <i class="fas fa-robot"></i>
+    </div>
+    <div class="message-content">
+      <p>I'm sorry, but I'm just a demo. For real AI assistance, you might want to connect this to an API like OpenAI's GPT or Google's Gemini.</p>
+    </div>
+  `;
+  
+  // Remove welcome message if it exists
+  const welcomeMessage = chatContainer.querySelector('.welcome-message');
+  if (welcomeMessage) {
+    welcomeMessage.remove();
+  }
+  
+  // Add messages to chat
+  chatContainer.appendChild(userMessage);
+  setTimeout(() => {
+    chatContainer.appendChild(aiMessage);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }, 500);
+  
+  // Clear search input
+  searchInput.value = '';
+}
+
+// --- Quick Links Management ---
+
+/** Sets up quick links functionality */
+function setupQuickLinks() {
+  const { 
+    quickLinksGrid, quickLinksList, addLinkButtons, 
+    addLinkModal, addLinkForm, closeLinkModalBtn, cancelLinkBtn,
+    linkNameInput, linkUrlInput, iconSelect, iconPreview, linkColorInput
+  } = AppState.domRefs;
+  
+  // Render quick links
+  renderQuickLinks();
+  
+  // Set up modal for adding/editing links
+  if (addLinkButtons) {
+    addLinkButtons.forEach(button => {
+      button.addEventListener('click', openAddLinkModal);
+    });
+  }
+  
+  if (closeLinkModalBtn) {
+    closeLinkModalBtn.addEventListener('click', closeAddLinkModal);
+  }
+  
+  if (cancelLinkBtn) {
+    cancelLinkBtn.addEventListener('click', closeAddLinkModal);
+  }
+  
+  // Update icon preview when selection changes
+  if (iconSelect && iconPreview) {
+    iconSelect.addEventListener('change', () => {
+      const iconClass = iconSelect.value;
+      iconPreview.innerHTML = `<i class="${iconClass}"></i>`;
+    });
+  }
+  
+  // Handle form submission
+  if (addLinkForm) {
+    addLinkForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveQuickLink();
+    });
+  }
+}
+
+/** Opens the add/edit link modal */
+function openAddLinkModal(e, linkToEdit = null) {
+  const { 
+    addLinkModal, modalTitle, linkNameInput, linkUrlInput, 
+    iconSelect, iconPreview, saveLinkBtn, linkColorInput
+  } = AppState.domRefs;
+  
+  // Reset form and set up for add/edit
+  addLinkForm.reset();
+  
+  if (linkToEdit) {
+    // Edit mode
+    modalTitle.textContent = 'Edit Quick Link';
+    saveLinkBtn.textContent = 'Save Changes';
+    
+    // Fill form with existing data
+    linkNameInput.value = linkToEdit.name;
+    linkUrlInput.value = linkToEdit.url;
+    
+    // Select icon
+    const iconOption = Array.from(iconSelect.options).find(option => option.value === linkToEdit.icon);
+    if (iconOption) {
+      iconOption.selected = true;
+    }
+    
+    // Update preview
+    iconPreview.innerHTML = `<i class="${linkToEdit.icon}"></i>`;
+    
+    // Set color if it exists
+    if (linkToEdit.color) {
+      linkColorInput.value = linkToEdit.color;
+    }
+    
+    // Store the index of the link being edited
+    addLinkForm.dataset.editIndex = AppState.quickLinks.indexOf(linkToEdit);
+  } else {
+    // Add mode
+    modalTitle.textContent = 'Add Quick Link';
+    saveLinkBtn.textContent = 'Add Link';
+    
+    // Reset preview
+    iconPreview.innerHTML = `<i class="${iconSelect.value}"></i>`;
+    
+    // Remove edit index
+    delete addLinkForm.dataset.editIndex;
+  }
+  
+  // Open the modal
+  addLinkModal.classList.add('active');
+}
+
+/** Closes the add/edit link modal */
+function closeAddLinkModal() {
+  const { addLinkModal } = AppState.domRefs;
+  addLinkModal.classList.remove('active');
+}
+
+/** Saves the quick link from the modal form */
+function saveQuickLink() {
+  const { linkNameInput, linkUrlInput, iconSelect, linkColorInput, addLinkForm } = AppState.domRefs;
+  
+  // Get form values
+  const name = linkNameInput.value.trim();
+  let url = linkUrlInput.value.trim();
+  const icon = iconSelect.value;
+  const color = linkColorInput.value;
+  
+  // Validate URL format
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+  
+  // Create link object
+  const linkData = { name, url, icon, color };
+  
+  // Check if editing or adding
+  const editIndex = addLinkForm.dataset.editIndex;
+  
+  if (editIndex !== undefined) {
+    // Edit existing link
+    AppState.quickLinks[editIndex] = linkData;
+  } else {
+    // Add new link
+    AppState.quickLinks.push(linkData);
+  }
+  
+  // Save and render updates
+  saveData('quickLinks');
+  renderQuickLinks();
+  closeAddLinkModal();
+}
+
+/** Renders quick links in both the grid and sidebar list */
+function renderQuickLinks() {
+  const { quickLinksGrid, quickLinksList } = AppState.domRefs;
+  
+  // Render in the main grid
+  if (quickLinksGrid) {
+    quickLinksGrid.innerHTML = '';
+    
+    AppState.quickLinks.forEach((link, index) => {
+      const linkCard = document.createElement('div');
+      linkCard.className = 'quick-link-card';
+      linkCard.innerHTML = `
+        <div class="quick-link-card-header" style="background-color: ${link.color || 'rgba(0, 0, 0, 0.2)'}">
+          <i class="${link.icon} quick-link-card-icon" style="color: ${link.color ? '#ffffff' : 'var(--accent-color)'}"></i>
+          <div class="quick-link-card-actions">
+            <button class="quick-link-action edit" title="Edit link">
+              <i class="fas fa-pencil-alt"></i>
+            </button>
+            <button class="quick-link-action delete" title="Delete link">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <a href="${link.url}" class="quick-link-card-body" target="_blank">
+          <span class="quick-link-card-title">${link.name}</span>
+        </a>
+      `;
+      
+      // Add edit functionality
+      const editBtn = linkCard.querySelector('.edit');
+      if (editBtn) {
+        editBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openAddLinkModal(e, link);
+        });
+      }
+      
+      // Add delete functionality
+      const deleteBtn = linkCard.querySelector('.delete');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (confirm(`Delete "${link.name}" from your quick links?`)) {
+            AppState.quickLinks.splice(index, 1);
+            saveData('quickLinks');
+            renderQuickLinks();
+          }
+        });
+      }
+      
+      quickLinksGrid.appendChild(linkCard);
+    });
+  }
+  
+  // Render in the sidebar list
+  if (quickLinksList) {
+    quickLinksList.innerHTML = '';
+    
+    AppState.quickLinks.forEach((link, index) => {
+      const linkItem = document.createElement('div');
+      linkItem.className = 'quick-link-item';
+      linkItem.innerHTML = `
+        <div class="quick-link-icon" style="background-color: ${link.color || 'var(--accent-color)'}">
+          <i class="${link.icon}"></i>
+        </div>
+        <a href="${link.url}" class="quick-link-text" target="_blank">${link.name}</a>
+      `;
+      quickLinksList.appendChild(linkItem);
+    });
+  }
+}
+
+// --- Settings Management ---
+
+/** Sets up settings functionality */
+function setupSettings() {
+  const {
+    settingsBtn, settingsModal, closeSettingsModalBtn,
+    customBgUpload, customBgBtn, resetBgBtn,
+    blurAmount, blurValue, userNameInput,
+    weatherLocationInput, resetSettingsBtn, saveSettingsBtn
+  } = AppState.domRefs;
+  
+  // Open settings modal
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', openSettingsModal);
+  }
+  
+  // Close settings modal
+  if (closeSettingsModalBtn) {
+    closeSettingsModalBtn.addEventListener('click', closeSettingsModal);
+  }
+  
+  // Custom background upload
+  if (customBgBtn && customBgUpload) {
+    customBgBtn.addEventListener('click', () => {
+      customBgUpload.click();
+    });
+    
+    customBgUpload.addEventListener('change', handleBackgroundUpload);
+  }
+  
+  // Reset background
+  if (resetBgBtn) {
+    resetBgBtn.addEventListener('click', resetBackground);
+  }
+  
+  // Blur amount slider
+  if (blurAmount && blurValue) {
+    // Set initial value
+    blurAmount.value = AppState.settings.bgBlur || 5;
+    blurValue.textContent = `${blurAmount.value}px`;
+    
+    // Update CSS variable and display on change
+    blurAmount.addEventListener('input', () => {
+      const value = blurAmount.value;
+      document.documentElement.style.setProperty('--bg-blur', `${value}px`);
+      blurValue.textContent = `${value}px`;
+      AppState.settings.bgBlur = value;
+    });
+  }
+  
+  // Save settings
+  if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener('click', saveSettings);
+  }
+  
+  // Reset all settings
+  if (resetSettingsBtn) {
+    resetSettingsBtn.addEventListener('click', resetAllSettings);
+  }
+  
+  // Initialize settings
+  initializeSettingsForm();
+}
+
+/** Opens the settings modal */
+function openSettingsModal() {
+  const { settingsModal } = AppState.domRefs;
+  
+  // Initialize form with current settings
+  initializeSettingsForm();
+  
+  // Open modal
+  settingsModal.classList.add('active');
+}
+
+/** Closes the settings modal */
+function closeSettingsModal() {
+  const { settingsModal } = AppState.domRefs;
+  settingsModal.classList.remove('active');
+}
+
+/** Initializes the settings form with current settings */
+function initializeSettingsForm() {
+  const { userNameInput, weatherLocationInput, blurAmount } = AppState.domRefs;
+  
+  if (userNameInput) {
+    userNameInput.value = AppState.settings.userName || '';
+  }
+  
+  if (weatherLocationInput) {
+    weatherLocationInput.value = AppState.settings.weatherLocation || '';
+  }
+  
+  if (blurAmount) {
+    blurAmount.value = AppState.settings.bgBlur || 5;
+    document.getElementById('blur-value').textContent = `${blurAmount.value}px`;
+    document.documentElement.style.setProperty('--bg-blur', `${blurAmount.value}px`);
+  }
+}
+
+/** Handles custom background image upload */
+function handleBackgroundUpload(e) {
+  const file = e.target.files[0];
+  
+  if (!file) return;
+  
+  const reader = new FileReader();
+  
+  reader.onload = (event) => {
+    // Store image data in settings
+    AppState.settings.customBackground = event.target.result;
+    
+    // Apply background
+    applyCustomBackground(event.target.result);
+    
+    // Save settings
+    saveData('settings');
+  };
+  
+  reader.readAsDataURL(file);
+}
+
+/** Applies a custom background image */
+function applyCustomBackground(imageData) {
+  if (!imageData) return;
+  
+  document.body.classList.add('custom-bg');
+  document.documentElement.style.setProperty('--bg-image', `url('${imageData}')`);
+}
+
+/** Resets the background to the theme default */
+function resetBackground() {
+  document.body.classList.remove('custom-bg');
+  document.documentElement.style.removeProperty('--bg-image');
+  
+  // Clear stored background
+  AppState.settings.customBackground = null;
+  saveData('settings');
+}
+
+/** Saves settings from the modal form */
+function saveSettings() {
+  const { userNameInput, weatherLocationInput, blurAmount } = AppState.domRefs;
+  
+  // Update settings object
+  if (userNameInput) {
+    AppState.settings.userName = userNameInput.value.trim();
+  }
+  
+  if (weatherLocationInput) {
+    AppState.settings.weatherLocation = weatherLocationInput.value.trim();
+  }
+  
+  if (blurAmount) {
+    AppState.settings.bgBlur = blurAmount.value;
+  }
+  
+  // Save to localStorage
+  saveData('settings');
+  
+  // Update UI that depends on settings
+  updateGreeting(new Date().getHours());
+  
+  // Fetch weather with new location if provided
+  if (weatherLocationInput && weatherLocationInput.value.trim()) {
+    fetchWeather();
+  }
+  
+  // Close the modal
+  closeSettingsModal();
+}
+
+/** Resets all settings to defaults */
+function resetAllSettings() {
+  if (confirm('Reset all settings to default values? This cannot be undone.')) {
+    // Reset settings to defaults
+    AppState.settings = {
+      theme: 'ocean',
+      customBackground: null,
+      searchEngine: 'google',
+      userName: '',
+      weatherLocation: '',
+      bgBlur: '5'
+    };
+    
+    // Reset UI elements
+    document.body.classList.remove('custom-bg');
+    document.documentElement.style.removeProperty('--bg-image');
+    document.documentElement.style.setProperty('--bg-blur', '5px');
+    
+    // Apply default theme
+    applyTheme('ocean');
+    
+    // Save to localStorage
+    saveData('settings');
+    
+    // Update form
+    initializeSettingsForm();
+    
+    // Update dependent UI elements
+    updateGreeting(new Date().getHours());
+    fetchWeather();
+    
+    // Notify user
+    alert('All settings have been reset to defaults.');
+  }
+}
+
+// --- Sidebar Management ---
+
+/** Sets up sidebar functionality */
+function setupSidebar() {
+  const { sidebarToggle, closeSidebarBtn, sidebarElement } = AppState.domRefs;
+  
+  // Toggle sidebar
+  if (sidebarToggle && sidebarElement) {
+    sidebarToggle.addEventListener('click', () => {
+      sidebarElement.classList.toggle('active');
+    });
+  }
+  
+  // Close sidebar
+  if (closeSidebarBtn && sidebarElement) {
+    closeSidebarBtn.addEventListener('click', () => {
+      sidebarElement.classList.remove('active');
+    });
+  }
+  
+  // Close sidebar when clicking outside on mobile
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth < 768) {
+      if (sidebarElement && sidebarElement.classList.contains('active')) {
+        const isClickInsideSidebar = sidebarElement.contains(e.target);
+        const isClickOnToggleButton = sidebarToggle && sidebarToggle.contains(e.target);
+        
+        if (!isClickInsideSidebar && !isClickOnToggleButton) {
+          sidebarElement.classList.remove('active');
+        }
+      }
+    }
+  });
+}
+
+// --- Voice Input ---
+
+/** Sets up voice input functionality */
+function setupVoiceInput() {
+  const { voiceBtn, searchInput } = AppState.domRefs;
+  
+  if (!voiceBtn || !searchInput) return;
+  
+  // Check if browser supports speech recognition
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    // Hide button if not supported
+    voiceBtn.style.display = 'none';
+    return;
+  }
+  
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  
+  // Start listening when button is clicked
+  voiceBtn.addEventListener('click', () => {
+    // Visual feedback - add active class
+    voiceBtn.classList.add('active');
+    voiceBtn.innerHTML = '<i class="fas fa-microphone-alt"></i>';
+    
+    recognition.start();
+  });
+  
+  // Process speech results
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    searchInput.value = transcript;
+    
+    // Focus on input
+    searchInput.focus();
+  };
+  
+  // Reset button when done
+  recognition.onend = () => {
+    voiceBtn.classList.remove('active');
+    voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+  };
+  
+  // Handle errors
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    voiceBtn.classList.remove('active');
+    voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+  };
+}
+
+/** Initializes UI animations */
+function setupAnimations() {
+  // Add staggered fade-in animations to quick links grid
+  const quickLinkCards = document.querySelectorAll('.quick-link-card');
+  quickLinkCards.forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    
+    setTimeout(() => {
+      card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, 100 + (index * 50)); // Staggered delay
+  });
+  
+  // Animate greeting text
+  const greeting = document.getElementById('greeting');
+  if (greeting) {
+    greeting.classList.add('fade-in');
+  }
+  
+  // Animate motivation text
+  const motivation = document.getElementById('motivation');
+  if (motivation) {
+    motivation.style.opacity = '0';
+    motivation.style.transform = 'translateY(10px)';
+    
+    setTimeout(() => {
+      motivation.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      motivation.style.opacity = '1';
+      motivation.style.transform = 'translateY(0)';
+    }, 300);
+  }
+}
+
+// --- Initialization ---
+
+/** Initialize the application */
+function initApp() {
+  // Cache DOM references
+  cacheDomReferences();
+  
+  // Load saved data from localStorage
+  loadData();
+  
+  // Set up theme management
+  setupThemeSwitcher();
+  
+  // Apply custom background if it exists
+  if (AppState.settings.customBackground) {
+    applyCustomBackground(AppState.settings.customBackground);
+  }
+  
+  // Apply blur setting
+  document.documentElement.style.setProperty('--bg-blur', `${AppState.settings.bgBlur || 5}px`);
+  
+  // Set up time and date display
+  updateTimeAndDate();
+  setInterval(updateTimeAndDate, 60000); // Update every minute
+  
+  // Set up weather display
+  fetchWeather();
+  
+  // Set up search functionality
+  setupSearch();
+  
+  // Set up quick links 
+  setupQuickLinks();
+  
+  // Set up settings management
+  setupSettings();
+  
+  // Set up sidebar functionality
+  setupSidebar();
+  
+  // Set up voice input
+  setupVoiceInput();
+  
+  // Initialize animations
+  setTimeout(setupAnimations, 500); // Delay to ensure DOM is fully ready
+  
+  console.log('Application initialized');
+}
+
+// Start the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', initApp);
+

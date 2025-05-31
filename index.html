@@ -1,228 +1,439 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="ocean">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Home Tab</title> <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+    <title>New Tab</title>
+
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.svg" />
-    <meta name="theme-color" content="#1a4f60" /> <link rel="stylesheet" href="styles.css" />
+    <meta name="theme-color" content="#1a4f60" />
+    <link rel="stylesheet" href="styles.css" />
+
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-      integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    </head>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
   <body>
     <div class="app-container">
-
-      <header class="header">
-        <div class="header-content">
-          <div id="chatgpt-time" class="time-display" aria-live="polite">
-            <span style="font-size: 1.2em">--:--</span>
-            <span style="font-size: 0.8em">:--</span>
-          </div>
-          <button
-            id="toggle-theme-switcher"
-            class="theme-toggle"
-            title="Toggle Theme Switcher"
-            aria-label="Toggle theme selection panel"
-            aria-expanded="false" /* JS will toggle this */
-          >
-            <i class="fas fa-palette"></i> </button>
-        </div>
-
-        <div class="theme-switcher" id="theme-switcher-panel" role="region" aria-labelledby="theme-switcher-title">
-           <h3 id="theme-switcher-title" class="visually-hidden">Theme Selection</h3> <div class="theme-grid">
-            <button class="theme-btn" data-theme="ocean" title="Ocean Theme">
-              <i class="fas fa-water"></i>
-              <span>Ocean</span>
-            </button>
-            <button class="theme-btn" data-theme="sunset" title="Sunset Theme">
-              <i class="fas fa-sun"></i>
-              <span>Sunset</span>
-            </button>
-            <button class="theme-btn" data-theme="forest" title="Forest Theme">
-              <i class="fas fa-tree"></i>
-              <span>Forest</span>
-            </button>
-            <button class="theme-btn" data-theme="galaxy" title="Galaxy Theme">
-              <i class="fas fa-star"></i> <span>Galaxy</span>
-            </button>
-            <button class="theme-btn" data-theme="desert" title="Desert Theme">
-              <i class="fas fa-cactus"></i> <span>Desert</span>
-            </button>
-            <button class="theme-btn" data-theme="arctic" title="Arctic Theme">
-              <i class="fas fa-snowflake"></i>
-              <span>Arctic</span>
-            </button>
-            <button class="theme-btn" data-theme="volcano" title="Volcano Theme">
-              <i class="fas fa-fire"></i>
-              <span>Volcano</span>
-            </button>
-            <button class="theme-btn" data-theme="midnight" title="Midnight Theme">
-              <i class="fas fa-moon"></i>
-              <span>Midnight</span>
-            </button>
-            <button class="theme-btn" data-theme="minimalist" title="Minimalist Theme">
-              <i class="fas fa-circle-notch"></i> <span>Minimal</span>
-            </button>
-            <button class="theme-btn" data-theme="cityscape" title="Cityscape Theme">
-              <i class="fas fa-city"></i>
-              <span>Cityscape</span>
-            </button>
-            <label class="custom-bg-btn" title="Set Custom Background">
-              <i class="fas fa-image"></i>
-              <span>Custom BG</span>
-              <input type="file" id="bg-upload" accept="image/*" aria-label="Upload custom background image" />
-              </label>
-          </div>
-        </div>
-      </header>
-
-      <main class="main-content">
-
-        <section class="search-container" aria-labelledby="search-heading">
-          <h2 id="search-heading" class="visually-hidden">Search</h2> <form
-            action="https://www.google.com/search"
-            method="get"
-            target="_blank" /* Open search results in new tab */
-            class="search-form"
-            role="search" /* ARIA role */
-          >
-            <div class="search-wrapper">
-              <i class="fas fa-search search-icon" aria-hidden="true"></i>
-              <input
-                type="text"
-                name="q"
-                placeholder="Search Google..."
-                class="search-input"
-                aria-label="Google Search Input"
-                required /* Make search input required */
-              />
-              <button type="submit" class="search-button">
-                 <i class="fas fa-arrow-right" aria-hidden="true"></i> <span class="visually-hidden">Submit Search</span> </button>
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-content">
+          <div class="sidebar-header">
+            <div class="logo-container">
+              <i class="fas fa-compass sidebar-logo pulse-animation"></i>
+              <span>My Dashboard</span>
             </div>
-          </form>
-        </section>
+            <button
+              id="close-sidebar"
+              class="close-sidebar-btn"
+              aria-label="Close sidebar"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
 
-        <section class="quick-links-container" aria-labelledby="quick-links-heading">
-          <h2 id="quick-links-heading" class="visually-hidden">Quick Links</h2>
-          <div class="quick-links-grid" id="quick-links">
-            </div>
-        </section>
-
-        <section class="todo-section" aria-labelledby="todo-heading">
-          <div class="todo-container">
-            <div class="todo-header">
-              <h2 id="todo-heading"><i class="fas fa-tasks" aria-hidden="true"></i> Tasks</h2>
-              <button
-                id="refresh-tasks-btn"
-                class="refresh-tasks-btn"
-                title="Refresh Tasks"
-                aria-label="Refresh task list"
-              >
-                <i class="fas fa-sync-alt"></i>
+          <div class="theme-switcher">
+            <h3>Choose Theme</h3>
+            <div class="theme-options">
+              <button class="theme-option" data-theme="light">
+                <i class="fas fa-sun"></i>
+                <span class="theme-label">Light</span>
+              </button>
+              <button class="theme-option" data-theme="dark">
+                <i class="fas fa-moon"></i>
+                <span class="theme-label">Dark</span>
+              </button>
+              <button class="theme-option" data-theme="ocean">
+                <i class="fas fa-water"></i>
+                <span class="theme-label">Ocean</span>
+              </button>
+              <button class="theme-option" data-theme="forest">
+                <i class="fas fa-tree"></i>
+                <span class="theme-label">Forest</span>
+              </button>
+              <button class="theme-option" data-theme="sunset">
+                <i class="fas fa-sun"></i>
+                <span class="theme-label">Sunset</span>
+              </button>
+              <button class="theme-option" data-theme="midnight">
+                <i class="fas fa-moon"></i>
+                <span class="theme-label">Midnight</span>
               </button>
             </div>
-            <div class="todo-input-container">
-              <input
-                type="text"
-                id="new-task"
-                placeholder="Add a new task (e.g., Buy milk)"
-                aria-label="New task input"
-              />
-              <button id="add-task-btn" class="add-task-btn" aria-label="Add new task">
+          </div>
+
+          <div class="quick-links-section">
+            <div class="section-header">
+              <h2>Quick Links</h2>
+              <button class="add-quick-link" aria-label="Add new quick link">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
-            <ul id="todo-list" class="todo-list" aria-live="polite">
-              </ul>
+            <div class="quick-links-list">
+              <!-- Quick links will be dynamically added here -->
+            </div>
           </div>
-        </section>
 
-        </main>
+          <div class="sidebar-footer">
+            <button class="settings-btn" id="settings-btn">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <main class="main-content">
+        <div class="top-bar">
+          <button
+            id="sidebar-toggle"
+            class="sidebar-toggle"
+            aria-label="Toggle Sidebar"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+
+          <div class="clock-weather-container">
+            <div id="clock" class="clock">00:00</div>
+            <div id="date" class="date">Loading...</div>
+            <div id="weather" class="weather">
+              <span id="temperature">--°</span>
+              <i class="fas fa-cloud"></i>
+            </div>
+          </div>
+
+          <button
+            id="theme-toggle"
+            class="theme-toggle"
+            aria-label="Toggle Theme"
+          >
+            <i class="fas fa-palette"></i>
+          </button>
+        </div>
+
+        <div class="hero-section">
+          <div class="greeting-container">
+            <h1 id="greeting" class="greeting">Hello, Friend</h1>
+            <p id="motivation" class="motivation">
+              What are we accomplishing today?
+            </p>
+          </div>
+        </div>
+
+        <div class="search-container">
+          <div class="search-box glass-effect">
+            <div class="search-engine-selector">
+              <button
+                id="search-engine-button"
+                class="search-engine-button"
+                aria-label="Select search engine"
+              >
+                <i id="search-engine-icon" class="fab fa-google"></i>
+              </button>
+              <div id="search-engine-dropdown" class="search-engine-dropdown">
+                <button class="search-engine-option" data-engine="google">
+                  <i class="fab fa-google"></i>
+                  <span>Google</span>
+                </button>
+                <button class="search-engine-option" data-engine="bing">
+                  <i class="fab fa-microsoft"></i>
+                  <span>Bing</span>
+                </button>
+                <button class="search-engine-option" data-engine="duckduckgo">
+                  <i class="fab fa-duckduckgo"></i>
+                  <span>DuckDuckGo</span>
+                </button>
+              </div>
+            </div>
+            <form id="search-form">
+              <input
+                type="text"
+                id="search-input"
+                class="search-input"
+                placeholder="Search or ask AI..."
+                aria-label="Search Input"
+              />
+              <div class="search-actions">
+                <button class="action-btn" id="search-btn" title="Search web">
+                  <i class="fas fa-search"></i>
+                </button>
+                <button class="action-btn" id="attach-btn" title="Attach file">
+                  <i class="fas fa-paperclip"></i>
+                </button>
+                <button
+                  class="action-btn send-btn"
+                  id="send-btn"
+                  title="Send message"
+                >
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+                <button
+                  class="action-btn voice-btn"
+                  id="voice-btn"
+                  title="Voice input"
+                >
+                  <i class="fas fa-microphone"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+          <div id="chat-container" class="chat-container glass-effect">
+            <div class="welcome-message">
+              <i class="fas fa-robot bounce-animation"></i>
+              <h3>Hello! How can I help you today?</h3>
+              <p>Ask me anything - I'm here to assist!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-access-grid">
+          <h2 class="section-title">Quick Access</h2>
+          <div id="quick-links-grid" class="links-grid">
+            <!-- Quick links will be dynamically added here as cards -->
+          </div>
+        </div>
+      </main>
     </div>
 
-    <div id="add-link-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
-      <div class="modal-content">
+    <div
+      id="add-link-modal"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      aria-hidden="true"
+    >
+      <div class="modal-content glass-effect">
         <div class="modal-header">
-          <h2 id="modal-title">Add Quick Link</h2>
-          <button class="modal-close" id="close-modal" aria-label="Close add link dialog">
+          <h2 id="modal-title" class="modal-title">Add Quick Link</h2>
+          <button
+            class="close-btn modal-close"
+            id="close-link-modal"
+            aria-label="Close add link dialog"
+          >
             <i class="fas fa-times"></i>
           </button>
         </div>
         <form id="add-link-form" class="modal-form">
           <div class="form-group">
             <label for="link-name">Name</label>
-            <input type="text" id="link-name" placeholder="e.g., My Portfolio" required />
+            <input
+              type="text"
+              id="link-name"
+              class="glass-effect-input"
+              placeholder="e.g., GitHub"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="link-url">URL</label>
-            <input type="url" id="link-url" placeholder="https://example.com" required />
+            <input
+              type="url"
+              id="link-url"
+              class="glass-effect-input"
+              placeholder="https://example.com"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="icon-select">Icon</label>
-            <div class="icon-selector">
-              <select id="icon-select" aria-label="Select icon for quick link">
+            <div class="icon-selector-wrapper">
+              <select
+                id="icon-select"
+                class="glass-effect-input"
+                aria-label="Select icon for quick link"
+              >
                 <option value="fas fa-link">General Link</option>
                 <option value="fas fa-globe">Website</option>
-                <option value="fas fa-star">Favorite</option>
-                <option value="fas fa-folder">Folder</option>
                 <option value="fab fa-github">GitHub</option>
-                <option value="fab fa-gitlab">GitLab</option>
-                <option value="fab fa-google">Google</option>
                 <option value="fab fa-youtube">YouTube</option>
-                <option value="fab fa-twitter">Twitter / X</option>
-                <option value="fab fa-facebook">Facebook</option>
-                <option value="fab fa-instagram">Instagram</option>
-                <option value="fab fa-linkedin">LinkedIn</option>
-                <option value="fab fa-slack">Slack</option>
-                <option value="fab fa-figma">Figma</option>
-                <option value="fab fa-codepen">CodePen</option>
                 <option value="fas fa-envelope">Email</option>
-                <option value="fas fa-calendar">Calendar</option>
-                <option value="fas fa-book">Docs / Read</option>
-                <option value="fas fa-code">Code / Dev</option>
-                <option value="fas fa-cloud">Cloud / Drive</option>
+                <option value="fas fa-code">Code</option>
+                <option value="fas fa-book">Documentation</option>
+                <option value="fas fa-cloud">Cloud</option>
+                <option value="fab fa-twitter">Twitter</option>
+                <option value="fab fa-linkedin">LinkedIn</option>
+                <option value="fab fa-instagram">Instagram</option>
                 <option value="fas fa-shopping-cart">Shopping</option>
                 <option value="fas fa-music">Music</option>
-                <option value="fas fa-video">Video / Stream</option>
-                <option value="fas fa-image">Photos / Images</option>
-                <option value="fas fa-file-alt">Documents</option>
-                <option value="fas fa-chart-bar">Analytics</option>
-                <option value="fas fa-cog">Settings</option>
-                <option value="fas fa-briefcase">Work</option>
-                <option value="fas fa-graduation-cap">School</option>
-                <option value="fas fa-gamepad">Games</option>
+                <option value="fas fa-video">Videos</option>
               </select>
-              <div id="icon-preview" aria-label="Selected icon preview"><i class="fas fa-link"></i></div>
+              <div
+                id="icon-preview"
+                class="icon-preview glass-effect-input"
+                aria-label="Selected icon preview"
+              >
+                <i class="fas fa-link"></i>
+              </div>
             </div>
           </div>
-          <div class="modal-buttons">
-             <button type="button" id="cancel-link" class="secondary-button">Cancel</button>
-             <button type="submit" id="save-link" class="primary-button">Save Link</button>
+          <div class="form-group">
+            <label for="link-color">Color (Optional)</label>
+            <input
+              type="color"
+              id="link-color"
+              class="color-input"
+              value="#5cffe3"
+            />
           </div>
-        </form> </div>
+          <div class="modal-buttons">
+            <button type="button" id="cancel-link-btn" class="secondary-button">
+              Cancel
+            </button>
+            <button type="submit" id="save-link-btn" class="primary-button">
+              Add Link
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div
+      id="settings-modal"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+      aria-hidden="true"
+    >
+      <div class="modal-content glass-effect">
+        <div class="modal-header">
+          <h2 id="settings-title" class="modal-title">Settings</h2>
+          <button
+            class="close-btn modal-close"
+            id="close-settings-modal"
+            aria-label="Close settings dialog"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="settings-container">
+          <div class="settings-section">
+            <h3>Appearance</h3>
+            <div class="setting-item">
+              <label for="custom-bg-upload">Custom Background</label>
+              <input
+                type="file"
+                id="custom-bg-upload"
+                accept="image/*"
+                class="visually-hidden"
+              />
+              <button id="custom-bg-btn" class="secondary-button">
+                Choose Image
+              </button>
+              <button
+                id="reset-bg-btn"
+                class="small-button danger-button"
+                aria-label="Reset background"
+              >
+                Reset
+              </button>
+            </div>
+            <div class="setting-item">
+              <label for="blur-amount">Background Blur</label>
+              <input type="range" id="blur-amount" min="0" max="20" value="5" />
+              <span id="blur-value">5px</span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Customization</h3>
+            <div class="setting-item">
+              <label for="user-name">Your Name</label>
+              <input
+                type="text"
+                id="user-name"
+                class="glass-effect-input"
+                placeholder="Enter your name"
+              />
+            </div>
+            <div class="setting-item">
+              <label for="weather-location">Weather Location</label>
+              <input
+                type="text"
+                id="weather-location"
+                class="glass-effect-input"
+                placeholder="City name or ZIP code"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button
+            id="reset-settings-btn"
+            class="danger-button"
+            aria-label="Reset all settings"
+          >
+            Reset All Settings
+          </button>
+          <button
+            id="save-settings-btn"
+            class="primary-button"
+            aria-label="Save settings"
+          >
+            Save Settings
+          </button>
+        </div>
+      </div>
     </div>
 
     <style>
       .visually-hidden {
-        position: absolute;
-        width: 1px;
+        position: absolute !important;
         height: 1px;
-        padding: 0;
-        margin: -1px;
+        width: 1px;
         overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border-width: 0;
+        clip: rect(1px, 1px, 1px, 1px);
+        white-space: nowrap; /* Prevent line breaks */
+      }
+
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+
+      .bounce-animation {
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes bounce {
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-10px);
+        }
+        60% {
+          transform: translateY(-5px);
+        }
       }
     </style>
 
     <script src="scripts.js"></script>
-    </body>
+  </body>
 </html>
