@@ -167,72 +167,93 @@ function saveData(part = 'all') {
 
 // --- Theme Management ---
 
-/** Updates the UI to match the current theme */
-function applyTheme(themeName) {
-  const { htmlElement, themeColorMeta } = AppState.domRefs;
-  
-  // Set the theme attribute on html
-  htmlElement.setAttribute('data-theme', themeName);
-  
-  // Update theme meta tag color
-  let themeColor = '#1a4f60'; // Default ocean color
-  
-  // Set the correct theme color for system UI based on theme
-  switch(themeName) {
-    case 'light': themeColor = '#f5f5f5'; break;
-    case 'dark': themeColor = '#121212'; break;
-    case 'forest': themeColor = '#22592e'; break;
-    case 'sunset': themeColor = '#ff6f61'; break;
-    case 'midnight': themeColor = '#2c3e50'; break;
-    case 'ocean': default: themeColor = '#1a4f60'; break;
-  }
-  
-  if (themeColorMeta) {
-    themeColorMeta.content = themeColor;
-  }
-  
-  // Update active class on theme options
-  document.querySelectorAll('.theme-option').forEach(button => {
-    if (button.getAttribute('data-theme') === themeName) {
-      button.classList.add('active');
-    } else {
-      button.classList.remove('active');
+/** Sets up theme functionality */
+function setupTheme() {
+    // Try to get preferred color scheme
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // If no theme is set, use system preference
+    if (!AppState.settings.theme) {
+        AppState.settings.theme = prefersDark ? 'dark' : 'light';
     }
-  });
-  
-  // Save theme in settings
-  AppState.settings.theme = themeName;
-  saveData('settings');
+    
+    // Set up theme change listener
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!AppState.settings.theme) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+    
+    // Set up the theme switcher UI
+    setupThemeSwitcher();
 }
 
 /** Sets up the theme switcher functionality */
 function setupThemeSwitcher() {
-  const { themeOptions, themeToggleBtn } = AppState.domRefs;
-  
-  // Apply the saved theme on load
-  applyTheme(AppState.settings.theme);
-  
-  // Set up theme option buttons
-  if (themeOptions) {
-    themeOptions.forEach(button => {
-      button.addEventListener('click', () => {
-        const themeName = button.getAttribute('data-theme');
-        if (themeName) {
-          applyTheme(themeName);
+    const { themeOptions, themeToggleBtn } = AppState.domRefs;
+    
+    // Apply the saved theme on load
+    applyTheme(AppState.settings.theme);
+    
+    // Set up theme option buttons
+    if (themeOptions) {
+        themeOptions.forEach(button => {
+            button.addEventListener('click', () => {
+                const themeName = button.getAttribute('data-theme');
+                if (themeName) {
+                    applyTheme(themeName);
+                }
+            });
+        });
+    }
+    
+    // Set up theme toggle button
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            const themes = ['light', 'dark', 'ocean', 'forest', 'sunset', 'midnight'];
+            const currentThemeIndex = themes.indexOf(AppState.settings.theme);
+            const nextThemeIndex = (currentThemeIndex + 1) % themes.length;
+            applyTheme(themes[nextThemeIndex]);
+        });
+    }
+}
+
+/** Updates the UI to match the current theme */
+function applyTheme(themeName) {
+    const { htmlElement, themeColorMeta } = AppState.domRefs;
+    
+    // Set the theme attribute on html
+    htmlElement.setAttribute('data-theme', themeName);
+    
+    // Update theme meta tag color
+    let themeColor = '#1a4f60'; // Default ocean color
+    
+    // Set the correct theme color for system UI based on theme
+    switch(themeName) {
+        case 'light': themeColor = '#f5f5f5'; break;
+        case 'dark': themeColor = '#121212'; break;
+        case 'forest': themeColor = '#22592e'; break;
+        case 'sunset': themeColor = '#ff6f61'; break;
+        case 'midnight': themeColor = '#2c3e50'; break;
+        case 'ocean': default: themeColor = '#1a4f60'; break;
+    }
+    
+    if (themeColorMeta) {
+        themeColorMeta.content = themeColor;
+    }
+    
+    // Update active class on theme options
+    document.querySelectorAll('.theme-option').forEach(button => {
+        if (button.getAttribute('data-theme') === themeName) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
         }
-      });
     });
-  }
-  
-  // Set up theme toggle button
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      const themes = ['light', 'dark', 'ocean', 'forest', 'sunset', 'midnight'];
-      const currentThemeIndex = themes.indexOf(AppState.settings.theme);
-      const nextThemeIndex = (currentThemeIndex + 1) % themes.length;
-      applyTheme(themes[nextThemeIndex]);
-    });
-  }
+    
+    // Save theme in settings
+    AppState.settings.theme = themeName;
+    saveData('settings');
 }
 
 // --- Time & Date Management ---
@@ -514,596 +535,281 @@ function handleAIQuery() {
 
 // --- Quick Links Management ---
 
-/** Sets up quick links functionality */
-function setupQuickLinks() {
-  const { 
-    quickLinksGrid, quickLinksList, addLinkButtons, 
-    addLinkModal, addLinkForm, closeLinkModalBtn, cancelLinkBtn,
-    linkNameInput, linkUrlInput, iconSelect, iconPreview, linkColorInput
-  } = AppState.domRefs;
-  
-  // Render quick links
-  renderQuickLinks();
-  
-  // Set up modal for adding/editing links
-  if (addLinkButtons) {
-    addLinkButtons.forEach(button => {
-      button.addEventListener('click', openAddLinkModal);
+/** Renders the quick links grid */
+function renderQuickLinks() {
+    const { quickLinksGrid } = AppState.domRefs;
+    
+    if (!quickLinksGrid) return;
+    
+    // Clear existing links
+    quickLinksGrid.innerHTML = '';
+    
+    // Create and append quick link cards
+    AppState.quickLinks.forEach((link) => {
+        const card = document.createElement('div');
+        card.className = 'quick-link-card glass-effect';
+        card.draggable = true;
+        
+        // Set card style with custom color if provided
+        if (link.color) {
+            card.style.setProperty('--card-accent-color', link.color);
+        }
+        
+        card.innerHTML = `
+            <div class="quick-link-card-icon">
+                <i class="${link.icon}"></i>
+            </div>
+            <div class="quick-link-card-title">${link.name}</div>
+        `;
+        
+        // Add click handler to open link
+        card.addEventListener('click', () => {
+            window.open(link.url, '_blank');
+        });
+        
+        // Add context menu for edit/delete
+        card.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            // TODO: Implement context menu for edit/delete functionality
+        });
+        
+        quickLinksGrid.appendChild(card);
     });
-  }
-  
-  if (closeLinkModalBtn) {
-    closeLinkModalBtn.addEventListener('click', closeAddLinkModal);
-  }
-  
-  if (cancelLinkBtn) {
-    cancelLinkBtn.addEventListener('click', closeAddLinkModal);
-  }
-  
-  // Update icon preview when selection changes
-  if (iconSelect && iconPreview) {
-    iconSelect.addEventListener('change', () => {
-      const iconClass = iconSelect.value;
-      iconPreview.innerHTML = `<i class="${iconClass}"></i>`;
-    });
-  }
-  
-  // Handle form submission
-  if (addLinkForm) {
-    addLinkForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      saveQuickLink();
-    });
-  }
 }
 
 /** Opens the add/edit link modal */
 function openAddLinkModal(e, linkToEdit = null) {
-  const { 
-    addLinkModal, modalTitle, linkNameInput, linkUrlInput, 
-    iconSelect, iconPreview, saveLinkBtn, linkColorInput
-  } = AppState.domRefs;
-  
-  // Reset form and set up for add/edit
-  addLinkForm.reset();
-  
-  if (linkToEdit) {
-    // Edit mode
-    modalTitle.textContent = 'Edit Quick Link';
-    saveLinkBtn.textContent = 'Save Changes';
+    if (e) e.preventDefault();
     
-    // Fill form with existing data
-    linkNameInput.value = linkToEdit.name;
-    linkUrlInput.value = linkToEdit.url;
+    const { 
+        addLinkModal, modalTitle, linkNameInput, linkUrlInput, 
+        iconSelect, iconPreview, saveLinkBtn, linkColorInput, addLinkForm
+    } = AppState.domRefs;
     
-    // Select icon
-    const iconOption = Array.from(iconSelect.options).find(option => option.value === linkToEdit.icon);
-    if (iconOption) {
-      iconOption.selected = true;
+    // Reset form
+    addLinkForm.reset();
+    
+    if (linkToEdit) {
+        // Edit mode
+        modalTitle.textContent = 'Edit Quick Link';
+        saveLinkBtn.textContent = 'Save Changes';
+        
+        // Fill form with existing data
+        linkNameInput.value = linkToEdit.name;
+        linkUrlInput.value = linkToEdit.url;
+        
+        // Select icon
+        const iconOption = Array.from(iconSelect.options).find(option => option.value === linkToEdit.icon);
+        if (iconOption) {
+            iconOption.selected = true;
+        }
+        
+        // Update preview
+        iconPreview.innerHTML = `<i class="${linkToEdit.icon}"></i>`;
+        
+        // Set color if it exists
+        if (linkToEdit.color) {
+            linkColorInput.value = linkToEdit.color;
+        }
+        
+        // Store the index of the link being edited
+        addLinkForm.dataset.editIndex = AppState.quickLinks.indexOf(linkToEdit);
+    } else {
+        // Add mode
+        modalTitle.textContent = 'Add Quick Link';
+        saveLinkBtn.textContent = 'Add Link';
+        
+        // Reset preview
+        iconPreview.innerHTML = `<i class="${iconSelect.value}"></i>`;
+        
+        // Remove edit index
+        delete addLinkForm.dataset.editIndex;
     }
     
-    // Update preview
-    iconPreview.innerHTML = `<i class="${linkToEdit.icon}"></i>`;
-    
-    // Set color if it exists
-    if (linkToEdit.color) {
-      linkColorInput.value = linkToEdit.color;
-    }
-    
-    // Store the index of the link being edited
-    addLinkForm.dataset.editIndex = AppState.quickLinks.indexOf(linkToEdit);
-  } else {
-    // Add mode
-    modalTitle.textContent = 'Add Quick Link';
-    saveLinkBtn.textContent = 'Add Link';
-    
-    // Reset preview
-    iconPreview.innerHTML = `<i class="${iconSelect.value}"></i>`;
-    
-    // Remove edit index
-    delete addLinkForm.dataset.editIndex;
-  }
-  
-  // Open the modal
-  addLinkModal.classList.add('active');
+    // Show the modal
+    addLinkModal.classList.add('active');
 }
 
 /** Closes the add/edit link modal */
 function closeAddLinkModal() {
-  const { addLinkModal } = AppState.domRefs;
-  addLinkModal.classList.remove('active');
+    const { addLinkModal, addLinkForm } = AppState.domRefs;
+    addLinkModal.classList.remove('active');
+    addLinkForm.reset();
 }
 
 /** Saves the quick link from the modal form */
 function saveQuickLink() {
-  const { linkNameInput, linkUrlInput, iconSelect, linkColorInput, addLinkForm } = AppState.domRefs;
-  
-  // Get form values
-  const name = linkNameInput.value.trim();
-  let url = linkUrlInput.value.trim();
-  const icon = iconSelect.value;
-  const color = linkColorInput.value;
-  
-  // Validate URL format
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = 'https://' + url;
-  }
-  
-  // Create link object
-  const linkData = { name, url, icon, color };
-  
-  // Check if editing or adding
-  const editIndex = addLinkForm.dataset.editIndex;
-  
-  if (editIndex !== undefined) {
-    // Edit existing link
-    AppState.quickLinks[editIndex] = linkData;
-  } else {
-    // Add new link
-    AppState.quickLinks.push(linkData);
-  }
-  
-  // Save and render updates
-  saveData('quickLinks');
-  renderQuickLinks();
-  closeAddLinkModal();
+    const { linkNameInput, linkUrlInput, iconSelect, linkColorInput, addLinkForm } = AppState.domRefs;
+    
+    // Get form values
+    const name = linkNameInput.value.trim();
+    let url = linkUrlInput.value.trim();
+    const icon = iconSelect.value;
+    const color = linkColorInput.value;
+    
+    // Validate URL format
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+    }
+    
+    // Create link object
+    const linkData = { name, url, icon, color };
+    
+    // Check if editing or adding
+    const editIndex = addLinkForm.dataset.editIndex;
+    
+    if (editIndex !== undefined) {
+        // Edit existing link
+        AppState.quickLinks[editIndex] = linkData;
+    } else {
+        // Add new link
+        AppState.quickLinks.push(linkData);
+    }
+    
+    // Save and render updates
+    saveData('quickLinks');
+    renderQuickLinks();
+    closeAddLinkModal();
 }
 
-/** Renders quick links in both the grid and sidebar list */
-function renderQuickLinks() {
-  const { quickLinksGrid, quickLinksList } = AppState.domRefs;
-  
-  // Render in the main grid
-  if (quickLinksGrid) {
-    quickLinksGrid.innerHTML = '';
+/** Sets up quick links functionality */
+function setupQuickLinks() {
+    const { 
+        quickLinksGrid, quickLinksList, addLinkButtons, 
+        addLinkModal, addLinkForm, closeLinkModalBtn, cancelLinkBtn,
+        linkNameInput, linkUrlInput, iconSelect, iconPreview, linkColorInput
+    } = AppState.domRefs;
     
-    AppState.quickLinks.forEach((link, index) => {
-      const linkCard = document.createElement('div');
-      linkCard.className = 'quick-link-card';
-      linkCard.innerHTML = `
-        <div class="quick-link-card-header" style="background-color: ${link.color || 'rgba(0, 0, 0, 0.2)'}">
-          <i class="${link.icon} quick-link-card-icon" style="color: ${link.color ? '#ffffff' : 'var(--accent-color)'}"></i>
-          <div class="quick-link-card-actions">
-            <button class="quick-link-action edit" title="Edit link">
-              <i class="fas fa-pencil-alt"></i>
-            </button>
-            <button class="quick-link-action delete" title="Delete link">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        </div>
-        <a href="${link.url}" class="quick-link-card-body" target="_blank">
-          <span class="quick-link-card-title">${link.name}</span>
-        </a>
-      `;
-      
-      // Add edit functionality
-      const editBtn = linkCard.querySelector('.edit');
-      if (editBtn) {
-        editBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          openAddLinkModal(e, link);
+    // Render initial quick links
+    renderQuickLinks();
+    
+    // Set up modal for adding/editing links
+    if (addLinkButtons) {
+        addLinkButtons.forEach(button => {
+            button.addEventListener('click', openAddLinkModal);
         });
-      }
-      
-      // Add delete functionality
-      const deleteBtn = linkCard.querySelector('.delete');
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (confirm(`Delete "${link.name}" from your quick links?`)) {
-            AppState.quickLinks.splice(index, 1);
-            saveData('quickLinks');
-            renderQuickLinks();
-          }
+    }
+    
+    if (closeLinkModalBtn) {
+        closeLinkModalBtn.addEventListener('click', closeAddLinkModal);
+    }
+    
+    if (cancelLinkBtn) {
+        cancelLinkBtn.addEventListener('click', closeAddLinkModal);
+    }
+    
+    // Update icon preview when selection changes
+    if (iconSelect && iconPreview) {
+        iconSelect.addEventListener('change', () => {
+            const iconClass = iconSelect.value;
+            iconPreview.innerHTML = `<i class="${iconClass}"></i>`;
         });
-      }
-      
-      quickLinksGrid.appendChild(linkCard);
-    });
-  }
-  
-  // Render in the sidebar list
-  if (quickLinksList) {
-    quickLinksList.innerHTML = '';
+    }
     
-    AppState.quickLinks.forEach((link, index) => {
-      const linkItem = document.createElement('div');
-      linkItem.className = 'quick-link-item';
-      linkItem.innerHTML = `
-        <div class="quick-link-icon" style="background-color: ${link.color || 'var(--accent-color)'}">
-          <i class="${link.icon}"></i>
-        </div>
-        <a href="${link.url}" class="quick-link-text" target="_blank">${link.name}</a>
-      `;
-      quickLinksList.appendChild(linkItem);
-    });
-  }
+    // Handle form submission
+    if (addLinkForm) {
+        addLinkForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveQuickLink();
+        });
+    }
+
+    // Make links draggable in grid
+    if (quickLinksGrid) {
+        quickLinksGrid.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('quick-link-card')) {
+                AppState.draggedLinkElement = e.target;
+                e.target.classList.add('dragging');
+            }
+        });
+
+        quickLinksGrid.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('quick-link-card')) {
+                e.target.classList.remove('dragging');
+                AppState.draggedLinkElement = null;
+            }
+        });
+
+        quickLinksGrid.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (AppState.draggedLinkElement) {
+                const draggingCard = AppState.draggedLinkElement;
+                const currentCard = e.target.closest('.quick-link-card');
+                
+                if (currentCard && draggingCard !== currentCard) {
+                    const draggingIndex = Array.from(quickLinksGrid.children).indexOf(draggingCard);
+                    const currentIndex = Array.from(quickLinksGrid.children).indexOf(currentCard);
+                    
+                    if (draggingIndex > currentIndex) {
+                        currentCard.parentNode.insertBefore(draggingCard, currentCard);
+                    } else {
+                        currentCard.parentNode.insertBefore(draggingCard, currentCard.nextSibling);
+                    }
+                    
+                    // Update AppState.quickLinks array
+                    const links = Array.from(quickLinksGrid.children).map(card => {
+                        const index = AppState.quickLinks.findIndex(link => 
+                            link.name === card.querySelector('.quick-link-card-title').textContent);
+                        return AppState.quickLinks[index];
+                    });
+                    AppState.quickLinks = links;
+                    saveData('quickLinks');
+                }
+            }
+        });
+    }
 }
-
-// --- Settings Management ---
-
-/** Sets up settings functionality */
-function setupSettings() {
-  const {
-    settingsBtn, settingsModal, closeSettingsModalBtn,
-    customBgUpload, customBgBtn, resetBgBtn,
-    blurAmount, blurValue, userNameInput,
-    weatherLocationInput, resetSettingsBtn, saveSettingsBtn
-  } = AppState.domRefs;
-  
-  // Open settings modal
-  if (settingsBtn) {
-    settingsBtn.addEventListener('click', openSettingsModal);
-  }
-  
-  // Close settings modal
-  if (closeSettingsModalBtn) {
-    closeSettingsModalBtn.addEventListener('click', closeSettingsModal);
-  }
-  
-  // Custom background upload
-  if (customBgBtn && customBgUpload) {
-    customBgBtn.addEventListener('click', () => {
-      customBgUpload.click();
-    });
-    
-    customBgUpload.addEventListener('change', handleBackgroundUpload);
-  }
-  
-  // Reset background
-  if (resetBgBtn) {
-    resetBgBtn.addEventListener('click', resetBackground);
-  }
-  
-  // Blur amount slider
-  if (blurAmount && blurValue) {
-    // Set initial value
-    blurAmount.value = AppState.settings.bgBlur || 5;
-    blurValue.textContent = `${blurAmount.value}px`;
-    
-    // Update CSS variable and display on change
-    blurAmount.addEventListener('input', () => {
-      const value = blurAmount.value;
-      document.documentElement.style.setProperty('--bg-blur', `${value}px`);
-      blurValue.textContent = `${value}px`;
-      AppState.settings.bgBlur = value;
-    });
-  }
-  
-  // Save settings
-  if (saveSettingsBtn) {
-    saveSettingsBtn.addEventListener('click', saveSettings);
-  }
-  
-  // Reset all settings
-  if (resetSettingsBtn) {
-    resetSettingsBtn.addEventListener('click', resetAllSettings);
-  }
-  
-  // Initialize settings
-  initializeSettingsForm();
-}
-
-/** Opens the settings modal */
-function openSettingsModal() {
-  const { settingsModal } = AppState.domRefs;
-  
-  // Initialize form with current settings
-  initializeSettingsForm();
-  
-  // Open modal
-  settingsModal.classList.add('active');
-}
-
-/** Closes the settings modal */
-function closeSettingsModal() {
-  const { settingsModal } = AppState.domRefs;
-  settingsModal.classList.remove('active');
-}
-
-/** Initializes the settings form with current settings */
-function initializeSettingsForm() {
-  const { userNameInput, weatherLocationInput, blurAmount } = AppState.domRefs;
-  
-  if (userNameInput) {
-    userNameInput.value = AppState.settings.userName || '';
-  }
-  
-  if (weatherLocationInput) {
-    weatherLocationInput.value = AppState.settings.weatherLocation || '';
-  }
-  
-  if (blurAmount) {
-    blurAmount.value = AppState.settings.bgBlur || 5;
-    document.getElementById('blur-value').textContent = `${blurAmount.value}px`;
-    document.documentElement.style.setProperty('--bg-blur', `${blurAmount.value}px`);
-  }
-}
-
-/** Handles custom background image upload */
-function handleBackgroundUpload(e) {
-  const file = e.target.files[0];
-  
-  if (!file) return;
-  
-  const reader = new FileReader();
-  
-  reader.onload = (event) => {
-    // Store image data in settings
-    AppState.settings.customBackground = event.target.result;
-    
-    // Apply background
-    applyCustomBackground(event.target.result);
-    
-    // Save settings
-    saveData('settings');
-  };
-  
-  reader.readAsDataURL(file);
-}
-
-/** Applies a custom background image */
-function applyCustomBackground(imageData) {
-  if (!imageData) return;
-  
-  document.body.classList.add('custom-bg');
-  document.documentElement.style.setProperty('--bg-image', `url('${imageData}')`);
-}
-
-/** Resets the background to the theme default */
-function resetBackground() {
-  document.body.classList.remove('custom-bg');
-  document.documentElement.style.removeProperty('--bg-image');
-  
-  // Clear stored background
-  AppState.settings.customBackground = null;
-  saveData('settings');
-}
-
-/** Saves settings from the modal form */
-function saveSettings() {
-  const { userNameInput, weatherLocationInput, blurAmount } = AppState.domRefs;
-  
-  // Update settings object
-  if (userNameInput) {
-    AppState.settings.userName = userNameInput.value.trim();
-  }
-  
-  if (weatherLocationInput) {
-    AppState.settings.weatherLocation = weatherLocationInput.value.trim();
-  }
-  
-  if (blurAmount) {
-    AppState.settings.bgBlur = blurAmount.value;
-  }
-  
-  // Save to localStorage
-  saveData('settings');
-  
-  // Update UI that depends on settings
-  updateGreeting(new Date().getHours());
-  
-  // Fetch weather with new location if provided
-  if (weatherLocationInput && weatherLocationInput.value.trim()) {
-    fetchWeather();
-  }
-  
-  // Close the modal
-  closeSettingsModal();
-}
-
-/** Resets all settings to defaults */
-function resetAllSettings() {
-  if (confirm('Reset all settings to default values? This cannot be undone.')) {
-    // Reset settings to defaults
-    AppState.settings = {
-      theme: 'ocean',
-      customBackground: null,
-      searchEngine: 'google',
-      userName: '',
-      weatherLocation: '',
-      bgBlur: '5'
-    };
-    
-    // Reset UI elements
-    document.body.classList.remove('custom-bg');
-    document.documentElement.style.removeProperty('--bg-image');
-    document.documentElement.style.setProperty('--bg-blur', '5px');
-    
-    // Apply default theme
-    applyTheme('ocean');
-    
-    // Save to localStorage
-    saveData('settings');
-    
-    // Update form
-    initializeSettingsForm();
-    
-    // Update dependent UI elements
-    updateGreeting(new Date().getHours());
-    fetchWeather();
-    
-    // Notify user
-    alert('All settings have been reset to defaults.');
-  }
-}
-
-// --- Sidebar Management ---
 
 /** Sets up sidebar functionality */
 function setupSidebar() {
-  const { sidebarToggle, closeSidebarBtn, sidebarElement } = AppState.domRefs;
-  
-  // Toggle sidebar
-  if (sidebarToggle && sidebarElement) {
-    sidebarToggle.addEventListener('click', () => {
-      sidebarElement.classList.toggle('active');
-    });
-  }
-  
-  // Close sidebar
-  if (closeSidebarBtn && sidebarElement) {
-    closeSidebarBtn.addEventListener('click', () => {
-      sidebarElement.classList.remove('active');
-    });
-  }
-  
-  // Close sidebar when clicking outside on mobile
-  document.addEventListener('click', (e) => {
-    if (window.innerWidth < 768) {
-      if (sidebarElement && sidebarElement.classList.contains('active')) {
-        const isClickInsideSidebar = sidebarElement.contains(e.target);
-        const isClickOnToggleButton = sidebarToggle && sidebarToggle.contains(e.target);
-        
-        if (!isClickInsideSidebar && !isClickOnToggleButton) {
-          sidebarElement.classList.remove('active');
-        }
-      }
+    const { sidebarElement, sidebarToggle, closeSidebarBtn } = AppState.domRefs;
+    
+    // Toggle sidebar when clicking the toggle button
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebarElement.classList.toggle('active');
+            document.querySelector('.app-container').classList.toggle('sidebar-visible');
+        });
     }
-  });
+    
+    // Close sidebar when clicking the close button
+    if (closeSidebarBtn) {
+        closeSidebarBtn.addEventListener('click', () => {
+            sidebarElement.classList.remove('active');
+            document.querySelector('.app-container').classList.remove('sidebar-visible');
+        });
+    }
+    
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 &&
+            sidebarElement.classList.contains('active') &&
+            !sidebarElement.contains(e.target) &&
+            !sidebarToggle.contains(e.target)) {
+            sidebarElement.classList.remove('active');
+            document.querySelector('.app-container').classList.remove('sidebar-visible');
+        }
+    });
 }
 
-// --- Voice Input ---
-
-/** Sets up voice input functionality */
-function setupVoiceInput() {
-  const { voiceBtn, searchInput } = AppState.domRefs;
-  
-  if (!voiceBtn || !searchInput) return;
-  
-  // Check if browser supports speech recognition
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  
-  if (!SpeechRecognition) {
-    // Hide button if not supported
-    voiceBtn.style.display = 'none';
-    return;
-  }
-  
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'en-US';
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  
-  // Start listening when button is clicked
-  voiceBtn.addEventListener('click', () => {
-    // Visual feedback - add active class
-    voiceBtn.classList.add('active');
-    voiceBtn.innerHTML = '<i class="fas fa-microphone-alt"></i>';
+// Initialize functions on document load
+document.addEventListener('DOMContentLoaded', () => {
+    // Cache DOM references first
+    cacheDomReferences();
     
-    recognition.start();
-  });
-  
-  // Process speech results
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    searchInput.value = transcript;
+    // Load data from storage
+    loadData();
     
-    // Focus on input
-    searchInput.focus();
-  };
-  
-  // Reset button when done
-  recognition.onend = () => {
-    voiceBtn.classList.remove('active');
-    voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-  };
-  
-  // Handle errors
-  recognition.onerror = (event) => {
-    console.error('Speech recognition error:', event.error);
-    voiceBtn.classList.remove('active');
-    voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-  };
-}
-
-/** Initializes UI animations */
-function setupAnimations() {
-  // Add staggered fade-in animations to quick links grid
-  const quickLinkCards = document.querySelectorAll('.quick-link-card');
-  quickLinkCards.forEach((card, index) => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(20px)';
+    // Setup all functionality
+    setupTheme();
+    setupSearch();
+    setupQuickLinks();
+    setupSidebar(); // Initialize sidebar functionality
     
-    setTimeout(() => {
-      card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-      card.style.opacity = '1';
-      card.style.transform = 'translateY(0)';
-    }, 100 + (index * 50)); // Staggered delay
-  });
-  
-  // Animate greeting text
-  const greeting = document.getElementById('greeting');
-  if (greeting) {
-    greeting.classList.add('fade-in');
-  }
-  
-  // Animate motivation text
-  const motivation = document.getElementById('motivation');
-  if (motivation) {
-    motivation.style.opacity = '0';
-    motivation.style.transform = 'translateY(10px)';
+    // Start timers
+    setInterval(updateTimeAndDate, 1000);
     
-    setTimeout(() => {
-      motivation.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-      motivation.style.opacity = '1';
-      motivation.style.transform = 'translateY(0)';
-    }, 300);
-  }
-}
-
-// --- Initialization ---
-
-/** Initialize the application */
-function initApp() {
-  // Cache DOM references
-  cacheDomReferences();
-  
-  // Load saved data from localStorage
-  loadData();
-  
-  // Set up theme management
-  setupThemeSwitcher();
-  
-  // Apply custom background if it exists
-  if (AppState.settings.customBackground) {
-    applyCustomBackground(AppState.settings.customBackground);
-  }
-  
-  // Apply blur setting
-  document.documentElement.style.setProperty('--bg-blur', `${AppState.settings.bgBlur || 5}px`);
-  
-  // Set up time and date display
-  updateTimeAndDate();
-  setInterval(updateTimeAndDate, 60000); // Update every minute
-  
-  // Set up weather display
-  fetchWeather();
-  
-  // Set up search functionality
-  setupSearch();
-  
-  // Set up quick links 
-  setupQuickLinks();
-  
-  // Set up settings management
-  setupSettings();
-  
-  // Set up sidebar functionality
-  setupSidebar();
-  
-  // Set up voice input
-  setupVoiceInput();
-  
-  // Initialize animations
-  setTimeout(setupAnimations, 500); // Delay to ensure DOM is fully ready
-  
-  console.log('Application initialized');
-}
-
-// Start the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', initApp);
-
+    // Update initial displays
+    updateTimeAndDate();
+    fetchWeather();
+});

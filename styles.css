@@ -388,8 +388,7 @@ input, select, textarea {
 }
 
 .quick-links-section {
-  margin-bottom: 2rem;
-  flex-grow: 1;
+  margin-top: 2rem;
 }
 
 .section-header {
@@ -409,6 +408,8 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   transition: var(--transition-fast);
+  border: none;
+  cursor: pointer;
 }
 
 .add-quick-link:hover {
@@ -430,6 +431,7 @@ input, select, textarea {
   border-radius: var(--border-radius-md);
   background-color: rgba(255, 255, 255, 0.1);
   transition: var(--transition-fast);
+  cursor: pointer;
 }
 
 .quick-link-item:hover {
@@ -438,21 +440,107 @@ input, select, textarea {
 }
 
 .quick-link-icon {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background-color: var(--accent-color);
-  color: var(--button-primary-text);
+  color: white;
 }
 
 .quick-link-text {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
   flex-grow: 1;
-  white-space: nowrap;
+}
+
+/* Quick Links Grid */
+.quick-access-grid {
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.quick-link-card {
+  background-color: var(--background-secondary);
+  border-radius: var(--border-radius-lg);
   overflow: hidden;
-  text-overflow: ellipsis;
+  transition: var(--transition-fast);
+  cursor: grab;
+  border: 2px solid transparent;
+}
+
+.quick-link-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.quick-link-card.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.quick-link-card-header {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--accent-color);
+}
+
+.quick-link-card-icon {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.quick-link-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.quick-link-action {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.quick-link-action:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.quick-link-card-body {
+  padding: 1rem;
+  text-decoration: none;
+  display: block;
+}
+
+.quick-link-card-title {
+  color: var(--text-primary);
+  font-weight: 500;
+  display: block;
+  text-align: center;
+}
+
+/* Dragging styles */
+.quick-link-card.drag-over {
+  border: 2px dashed var(--accent-color);
 }
 
 .sidebar-footer {
