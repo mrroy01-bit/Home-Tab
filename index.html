@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="ocean">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,7 +7,7 @@
 
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.svg" />
-    <meta name="theme-color" content="#1a4f60" />
+    <meta name="theme-color" content="#570df8" />
     <link rel="stylesheet" href="styles.css" />
 
     <link
@@ -45,30 +45,243 @@
 
           <div class="theme-switcher">
             <h3>Choose Theme</h3>
+            <div class="theme-categories">
+              <button class="theme-category active" data-category="all">
+                All
+              </button>
+              <button class="theme-category" data-category="light">
+                Light
+              </button>
+              <button class="theme-category" data-category="dark">Dark</button>
+              <button class="theme-category" data-category="colorful">
+                Colorful
+              </button>
+            </div>
             <div class="theme-options">
-              <button class="theme-option" data-theme="light">
-                <i class="fas fa-sun"></i>
+              <!-- Light Themes -->
+              <button
+                class="theme-option"
+                data-theme="light"
+                data-category="light"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #f8fafc, #cbd5e1)"
+                ></div>
                 <span class="theme-label">Light</span>
               </button>
-              <button class="theme-option" data-theme="dark">
-                <i class="fas fa-moon"></i>
+              <button
+                class="theme-option"
+                data-theme="cupcake"
+                data-category="light"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #fdf2f8, #f5d0fe)"
+                ></div>
+                <span class="theme-label">Cupcake</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="bumblebee"
+                data-category="light"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #fef9c3, #fbbf24)"
+                ></div>
+                <span class="theme-label">Bumblebee</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="emerald"
+                data-category="light"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #ecfdf5, #6ee7b7)"
+                ></div>
+                <span class="theme-label">Emerald</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="corporate"
+                data-category="light"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #f8fafc, #cbd5e1)"
+                ></div>
+                <span class="theme-label">Corporate</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="retro"
+                data-category="light"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #f9fafb, #fef3c7)"
+                ></div>
+                <span class="theme-label">Retro</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="lofi"
+                data-category="light"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #f9fafb, #d1d5db)"
+                ></div>
+                <span class="theme-label">Lofi</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="pastel"
+                data-category="light"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #eff6ff, #93c5fd)"
+                ></div>
+                <span class="theme-label">Pastel</span>
+              </button>
+
+              <!-- Dark Themes -->
+              <button
+                class="theme-option"
+                data-theme="dark"
+                data-category="dark"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #0f172a, #475569)"
+                ></div>
                 <span class="theme-label">Dark</span>
               </button>
-              <button class="theme-option" data-theme="ocean">
-                <i class="fas fa-water"></i>
-                <span class="theme-label">Ocean</span>
+              <button
+                class="theme-option"
+                data-theme="synthwave"
+                data-category="dark"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #27033d, #8514b8)"
+                ></div>
+                <span class="theme-label">Synthwave</span>
               </button>
-              <button class="theme-option" data-theme="forest">
-                <i class="fas fa-tree"></i>
+              <button
+                class="theme-option"
+                data-theme="cyberpunk"
+                data-category="dark"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #0d0221, #57049e)"
+                ></div>
+                <span class="theme-label">Cyberpunk</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="halloween"
+                data-category="dark"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #18181b, #52525b)"
+                ></div>
+                <span class="theme-label">Halloween</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="forest"
+                data-category="dark"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #064e3b, #059669)"
+                ></div>
                 <span class="theme-label">Forest</span>
               </button>
-              <button class="theme-option" data-theme="sunset">
-                <i class="fas fa-sun"></i>
-                <span class="theme-label">Sunset</span>
+              <button
+                class="theme-option"
+                data-theme="aqua"
+                data-category="dark"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #155e75, #06b6d4)"
+                ></div>
+                <span class="theme-label">Aqua</span>
               </button>
-              <button class="theme-option" data-theme="midnight">
-                <i class="fas fa-moon"></i>
-                <span class="theme-label">Midnight</span>
+              <button
+                class="theme-option"
+                data-theme="black"
+                data-category="dark"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #000000, #27272a)"
+                ></div>
+                <span class="theme-label">Black</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="luxury"
+                data-category="dark"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #09090b, #3f3f46)"
+                ></div>
+                <span class="theme-label">Luxury</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="dracula"
+                data-category="dark"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #282a36, #6272a4)"
+                ></div>
+                <span class="theme-label">Dracula</span>
+              </button>
+
+              <!-- Colorful Themes -->
+              <button
+                class="theme-option"
+                data-theme="valentine"
+                data-category="colorful"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #fff1f2, #fda4af)"
+                ></div>
+                <span class="theme-label">Valentine</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="garden"
+                data-category="colorful"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #f9fafb, #d1d5db)"
+                ></div>
+                <span class="theme-label">Garden</span>
+              </button>
+              <button
+                class="theme-option"
+                data-theme="fantasy"
+                data-category="colorful"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: linear-gradient(135deg, #4f2284, #883ae2)"
+                ></div>
+                <span class="theme-label">Fantasy</span>
               </button>
             </div>
           </div>

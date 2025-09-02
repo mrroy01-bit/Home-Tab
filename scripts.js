@@ -2,7 +2,7 @@ const AppState = {
   todos: [],
   quickLinks: [],
   settings: {
-      theme: 'ocean',
+      theme: 'light',
       customBackground: null,
       searchEngine: 'google',
       taskSort: 'created',
@@ -210,10 +210,38 @@ function setupThemeSwitcher() {
     // Set up theme toggle button
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
-            const themes = ['light', 'dark', 'ocean', 'forest', 'sunset', 'midnight'];
+            const themes = ['light', 'dark', 'synthwave', 'cupcake', 'emerald', 'cyberpunk'];
             const currentThemeIndex = themes.indexOf(AppState.settings.theme);
             const nextThemeIndex = (currentThemeIndex + 1) % themes.length;
             applyTheme(themes[nextThemeIndex]);
+        });
+    }
+
+    // Set up theme category filters
+    const themeCategories = document.querySelectorAll('.theme-category');
+    if (themeCategories) {
+        themeCategories.forEach(category => {
+            category.addEventListener('click', () => {
+                // Remove active class from all categories
+                themeCategories.forEach(cat => cat.classList.remove('active'));
+                
+                // Add active class to clicked category
+                category.classList.add('active');
+                
+                // Get category value
+                const categoryValue = category.getAttribute('data-category');
+                
+                // Filter theme options
+                document.querySelectorAll('.theme-option').forEach(option => {
+                    const optionCategory = option.getAttribute('data-category');
+                    
+                    if (categoryValue === 'all' || categoryValue === optionCategory) {
+                        option.style.display = 'flex';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+            });
         });
     }
 }
@@ -226,16 +254,35 @@ function applyTheme(themeName) {
     htmlElement.setAttribute('data-theme', themeName);
     
     // Update theme meta tag color
-    let themeColor = '#1a4f60'; // Default ocean color
+    let themeColor = '#570df8'; // Default light theme accent color
     
     // Set the correct theme color for system UI based on theme
     switch(themeName) {
-        case 'light': themeColor = '#f5f5f5'; break;
-        case 'dark': themeColor = '#121212'; break;
-        case 'forest': themeColor = '#22592e'; break;
-        case 'sunset': themeColor = '#ff6f61'; break;
-        case 'midnight': themeColor = '#2c3e50'; break;
-        case 'ocean': default: themeColor = '#1a4f60'; break;
+        // Light themes
+        case 'light': themeColor = '#570df8'; break;
+        case 'cupcake': themeColor = '#65c3c8'; break;
+        case 'bumblebee': themeColor = '#e0a82e'; break; 
+        case 'emerald': themeColor = '#66cc8a'; break;
+        case 'corporate': themeColor = '#4b6bfb'; break;
+        case 'retro': themeColor = '#ef9995'; break;
+        case 'lofi': themeColor = '#818cf8'; break;
+        case 'pastel': themeColor = '#a5b4fc'; break;
+
+        // Dark themes
+        case 'dark': themeColor = '#661AE6'; break;
+        case 'synthwave': themeColor = '#e779c1'; break;
+        case 'cyberpunk': themeColor = '#ffff00'; break;
+        case 'halloween': themeColor = '#f97316'; break;
+        case 'forest': themeColor = '#2BAE66'; break;
+        case 'aqua': themeColor = '#06b6d4'; break;
+        case 'black': themeColor = '#6d28d9'; break;
+        case 'luxury': themeColor = '#e0aa3e'; break;
+        case 'dracula': themeColor = '#bd93f9'; break;
+
+        // Colorful themes
+        case 'valentine': themeColor = '#e96d85'; break;
+        case 'garden': themeColor = '#5c7f67'; break;
+        case 'fantasy': themeColor = '#883AE2'; break;
     }
     
     if (themeColorMeta) {
