@@ -1,3 +1,5 @@
+import { geminiService } from './services/geminiService.js';
+
 const AppState = {
   todos: [],
   quickLinks: [],
@@ -46,7 +48,7 @@ const AppState = {
   ],
   domRefs: {}, 
   draggedLinkElement: null,
-  weatherApiKey: '89ac0963d98ecf5cef698592b36e0300', // Sample key - replace with your own from OpenWeatherMap
+  chatHistory: [],
 };
 
 // --- DOM Element Caching ---
@@ -360,8 +362,24 @@ async function fetchWeather() {
   if (!weatherDisplay) return;
   
   try {
-    const location = AppState.settings.weatherLocation || 'auto:ip'; // Default to IP-based location
-    const apiKey = AppState.weatherApiKey;
+    // Load API key from storage
+    let apiKey;
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+      const result = await new Promise(resolve => {
+        chrome.storage.sync.get(['weatherApiKey'], resolve);
+      });
+      apiKey = result.weatherApiKey;
+    } else {
+      apiKey = localStorage.getItem('weatherApiKey');
+    }
+    
+    if (!apiKey) {
+      weatherDisplay.textContent = '--°';
+      console.warn('Weather API key not configured');
+      return;
+    }
+    
+    const location = AppState.settings.weatherLocation || 'auto:ip';
     
     // Handle default case with browser geolocation
     if (location === 'auto:ip' && navigator.geolocation) {
@@ -531,13 +549,19 @@ function performSearch() {
 }
 
 /** Handles AI query submission */
-function handleAIQuery() {
+async function handleAIQuery() {
   const { searchInput, chatContainer } = AppState.domRefs;
   
   if (!searchInput || !chatContainer || !searchInput.value.trim()) return;
   
-  // Get user's query
   const query = searchInput.value.trim();
+  searchInput.value = '';
+  
+  // Remove welcome message if it exists
+  const welcomeMessage = chatContainer.querySelector('.welcome-message');
+  if (welcomeMessage) {
+    welcomeMessage.remove();
+  }
   
   // Create user message element
   const userMessage = document.createElement('div');
@@ -547,11 +571,14 @@ function handleAIQuery() {
       <i class="fas fa-user"></i>
     </div>
     <div class="message-content">
-      <p>${query}</p>
+      <p>${escapeHtml(query)}</p>
     </div>
   `;
   
-  // Create AI response (placeholder)
+  chatContainer.appendChild(userMessage);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+  
+  // Create AI response placeholder with loading state
   const aiMessage = document.createElement('div');
   aiMessage.className = 'chat-message ai-message';
   aiMessage.innerHTML = `
@@ -559,26 +586,141 @@ function handleAIQuery() {
       <i class="fas fa-robot"></i>
     </div>
     <div class="message-content">
-      <p>I'm sorry, but I'm just a demo. For real AI assistance, you might want to connect this to an API like OpenAI's GPT or Google's Gemini.</p>
+      <div class="typing-indicator">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
   `;
   
-  // Remove welcome message if it exists
+  chatContainer.appendChild(aiMessage);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+  
+  try {
+    // Get response from Gemini
+    const response = await geminiService.generateResponse(query);
+    
+    // Update AI message with response
+    const messageContent = aiMessage.querySelector('.message-content');
+    messageContent.innerHTML = `<p>${formatAIResponse(response)}</p>`;
+    
+    // Save to chat history
+    AppState.chatHistory.push(
+      { role: 'user', content: query, timestamp: Date.now() },
+      { role: 'ai', content: response, timestamp: Date.now() }
+    );
+    saveChatHistory();
+    
+  } catch (error) {
+    console.error('AI Error:', error);
+    
+    // Show error message
+    const messageContent = aiMessage.querySelector('.message-content');
+    const errorMsg = error.message.includes('API key') 
+      ? 'API key not configured. Please set your Gemini API key in extension settings.'
+      : `Error: ${error.message}`;
+    
+    messageContent.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>${escapeHtml(errorMsg)}</p>
+        ${error.message.includes('API key') ? '<button class="open-settings-btn" onclick="openSettings()">Open Settings</button>' : ''}
+      </div>
+    `;
+  }
+  
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatAIResponse(text) {
+  // Basic markdown-like formatting
+  let formatted = escapeHtml(text);
+  
+  // Bold text
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Code blocks
+  formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+  
+  // Line breaks
+  formatted = formatted.replace(/\n/g, '<br>');
+  
+  return formatted;
+}
+
+function saveChatHistory() {
+  try {
+    // Keep only last 50 messages
+    if (AppState.chatHistory.length > 50) {
+      AppState.chatHistory = AppState.chatHistory.slice(-50);
+    }
+    localStorage.setItem('chatHistory', JSON.stringify(AppState.chatHistory));
+  } catch (e) {
+    console.error('Error saving chat history:', e);
+  }
+}
+
+function loadChatHistory() {
+  try {
+    const stored = localStorage.getItem('chatHistory');
+    if (stored) {
+      AppState.chatHistory = JSON.parse(stored);
+      renderChatHistory();
+    }
+  } catch (e) {
+    console.error('Error loading chat history:', e);
+    AppState.chatHistory = [];
+  }
+}
+
+function renderChatHistory() {
+  const { chatContainer } = AppState.domRefs;
+  if (!chatContainer || AppState.chatHistory.length === 0) return;
+  
+  // Remove welcome message
   const welcomeMessage = chatContainer.querySelector('.welcome-message');
   if (welcomeMessage) {
     welcomeMessage.remove();
   }
   
-  // Add messages to chat
-  chatContainer.appendChild(userMessage);
-  setTimeout(() => {
-    chatContainer.appendChild(aiMessage);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-  }, 500);
+  // Render last 10 messages
+  const recentMessages = AppState.chatHistory.slice(-10);
+  recentMessages.forEach(msg => {
+    const messageEl = document.createElement('div');
+    messageEl.className = `chat-message ${msg.role}-message`;
+    
+    const icon = msg.role === 'user' ? 'fa-user' : 'fa-robot';
+    const content = msg.role === 'ai' ? formatAIResponse(msg.content) : escapeHtml(msg.content);
+    
+    messageEl.innerHTML = `
+      <div class="message-avatar">
+        <i class="fas ${icon}"></i>
+      </div>
+      <div class="message-content">
+        <p>${content}</p>
+      </div>
+    `;
+    
+    chatContainer.appendChild(messageEl);
+  });
   
-  // Clear search input
-  searchInput.value = '';
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 }
+
+window.openSettings = function() {
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.openOptionsPage) {
+    chrome.runtime.openOptionsPage();
+  } else {
+    window.open('options.html', '_blank');
+  }
+};
 
 // --- Quick Links Management ---
 

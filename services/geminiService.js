@@ -2,13 +2,41 @@ import config from '../config.js';
 
 class GeminiService {
     constructor() {
-        this.apiKey = config.geminiApiKey;
+        this.apiKey = null;
         this.endpoint = config.apiEndpoint;
+        this.loadApiKey();
+    }
+
+    async loadApiKey() {
+        return new Promise((resolve) => {
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                chrome.storage.sync.get(['geminiApiKey'], (result) => {
+                    this.apiKey = result.geminiApiKey || null;
+                    resolve(this.apiKey);
+                });
+            } else {
+                // Fallback to localStorage
+                this.apiKey = localStorage.getItem('geminiApiKey') || null;
+                resolve(this.apiKey);
+            }
+        });
+    }
+
+    async ensureApiKey() {
+        if (!this.apiKey) {
+            await this.loadApiKey();
+        }
+        if (!this.apiKey) {
+            throw new Error('API key not configured. Please set your Gemini API key in extension settings.');
+        }
+        return this.apiKey;
     }
 
     async generateResponse(prompt) {
         try {
-            const response = await fetch(`${this.endpoint}?key=${this.apiKey}`, {
+            const apiKey = await this.ensureApiKey();
+            
+            const response = await fetch(`${this.endpoint}?key=${apiKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -60,7 +88,9 @@ class GeminiService {
 
     async streamResponse(prompt, onChunk) {
         try {
-            const response = await fetch(`${this.endpoint}?key=${this.apiKey}`, {
+            const apiKey = await this.ensureApiKey();
+            
+            const response = await fetch(`${this.endpoint}?key=${apiKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

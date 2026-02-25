@@ -20,6 +20,7 @@
     "storage",
     "geolocation"
   ],
+  "options_page": "options.html",
   "host_permissions": [
     "https://api.openweathermap.org/"
   ],
