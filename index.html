@@ -3,650 +3,385 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New Tab</title>
-
-    <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.svg" />
-    <meta name="theme-color" content="#570df8" />
-    <link rel="stylesheet" href="styles.css" />
-
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-
+    <title>Nova Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   </head>
   <body>
-    <div class="app-container">
-      <div class="sidebar" id="sidebar">
-        <div class="sidebar-content">
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="app-container" id="app-container">
+
+      <!-- ═══ SIDEBAR ═══ -->
+      <aside class="sidebar" id="sidebar" aria-label="Navigation sidebar">
+        <div class="sidebar-inner">
+
+          <!-- Sidebar Header -->
           <div class="sidebar-header">
-            <div class="logo-container">
-              <i class="fas fa-compass sidebar-logo pulse-animation"></i>
-              <span>My Dashboard</span>
+            <div class="logo-wrap">
+              <span class="logo-icon"><i class="fas fa-compass"></i></span>
+              <span class="logo-text">Nova</span>
             </div>
-            <button
-              id="close-sidebar"
-              class="close-sidebar-btn"
-              aria-label="Close sidebar"
-            >
+            <button class="icon-btn" id="close-sidebar" aria-label="Close sidebar" title="Close">
               <i class="fas fa-times"></i>
             </button>
           </div>
 
-          <div class="theme-switcher">
-            <h3>Choose Theme</h3>
-            <div class="theme-categories">
-              <button class="theme-category active" data-category="all">
-                All
-              </button>
-              <button class="theme-category" data-category="light">
-                Light
-              </button>
-              <button class="theme-category" data-category="dark">Dark</button>
-              <button class="theme-category" data-category="colorful">
-                Colorful
-              </button>
+          <!-- Theme Switcher -->
+          <section class="sidebar-section">
+            <div class="section-label">
+              <i class="fas fa-palette"></i>
+              <span>Themes</span>
             </div>
-            <div class="theme-options">
+
+            <div class="theme-filter-tabs">
+              <button class="tab-btn active" data-category="all">All</button>
+              <button class="tab-btn" data-category="light">Light</button>
+              <button class="tab-btn" data-category="dark">Dark</button>
+              <button class="tab-btn" data-category="colorful">Color</button>
+            </div>
+
+            <div class="theme-grid" id="theme-options-grid">
               <!-- Light Themes -->
-              <button
-                class="theme-option"
-                data-theme="light"
-                data-category="light"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #f8fafc, #cbd5e1)"
-                ></div>
-                <span class="theme-label">Light</span>
+              <button class="theme-swatch" data-theme="light" data-category="light" title="Light">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#f8fafc,#cbd5e1)"></span>
+                <span class="swatch-label">Light</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="cupcake"
-                data-category="light"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #fdf2f8, #f5d0fe)"
-                ></div>
-                <span class="theme-label">Cupcake</span>
+              <button class="theme-swatch" data-theme="cupcake" data-category="light" title="Cupcake">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#fdf2f8,#f5d0fe)"></span>
+                <span class="swatch-label">Cupcake</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="bumblebee"
-                data-category="light"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #fef9c3, #fbbf24)"
-                ></div>
-                <span class="theme-label">Bumblebee</span>
+              <button class="theme-swatch" data-theme="bumblebee" data-category="light" title="Bumblebee">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#fef9c3,#fbbf24)"></span>
+                <span class="swatch-label">Bee</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="emerald"
-                data-category="light"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #ecfdf5, #6ee7b7)"
-                ></div>
-                <span class="theme-label">Emerald</span>
+              <button class="theme-swatch" data-theme="emerald" data-category="light" title="Emerald">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#ecfdf5,#6ee7b7)"></span>
+                <span class="swatch-label">Emerald</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="corporate"
-                data-category="light"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #f8fafc, #cbd5e1)"
-                ></div>
-                <span class="theme-label">Corporate</span>
+              <button class="theme-swatch" data-theme="corporate" data-category="light" title="Corporate">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#f8fafc,#93c5fd)"></span>
+                <span class="swatch-label">Corp</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="retro"
-                data-category="light"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #f9fafb, #fef3c7)"
-                ></div>
-                <span class="theme-label">Retro</span>
+              <button class="theme-swatch" data-theme="retro" data-category="light" title="Retro">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#fef3c7,#d97706)"></span>
+                <span class="swatch-label">Retro</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="lofi"
-                data-category="light"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #f9fafb, #d1d5db)"
-                ></div>
-                <span class="theme-label">Lofi</span>
+              <button class="theme-swatch" data-theme="lofi" data-category="light" title="Lofi">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#f3f4f6,#818cf8)"></span>
+                <span class="swatch-label">Lofi</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="pastel"
-                data-category="light"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #eff6ff, #93c5fd)"
-                ></div>
-                <span class="theme-label">Pastel</span>
+              <button class="theme-swatch" data-theme="pastel" data-category="light" title="Pastel">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#eff6ff,#a5b4fc)"></span>
+                <span class="swatch-label">Pastel</span>
               </button>
-
               <!-- Dark Themes -->
-              <button
-                class="theme-option"
-                data-theme="dark"
-                data-category="dark"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #0f172a, #475569)"
-                ></div>
-                <span class="theme-label">Dark</span>
+              <button class="theme-swatch" data-theme="dark" data-category="dark" title="Dark">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#0f172a,#475569)"></span>
+                <span class="swatch-label">Dark</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="synthwave"
-                data-category="dark"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #27033d, #8514b8)"
-                ></div>
-                <span class="theme-label">Synthwave</span>
+              <button class="theme-swatch" data-theme="synthwave" data-category="dark" title="Synthwave">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#27033d,#e779c1)"></span>
+                <span class="swatch-label">Synth</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="cyberpunk"
-                data-category="dark"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #0d0221, #57049e)"
-                ></div>
-                <span class="theme-label">Cyberpunk</span>
+              <button class="theme-swatch" data-theme="cyberpunk" data-category="dark" title="Cyberpunk">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#0d0221,#ffff00)"></span>
+                <span class="swatch-label">Cyber</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="halloween"
-                data-category="dark"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #18181b, #52525b)"
-                ></div>
-                <span class="theme-label">Halloween</span>
+              <button class="theme-swatch" data-theme="halloween" data-category="dark" title="Halloween">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#18181b,#f97316)"></span>
+                <span class="swatch-label">Hallo</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="forest"
-                data-category="dark"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #064e3b, #059669)"
-                ></div>
-                <span class="theme-label">Forest</span>
+              <button class="theme-swatch" data-theme="forest" data-category="dark" title="Forest">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#064e3b,#34d399)"></span>
+                <span class="swatch-label">Forest</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="aqua"
-                data-category="dark"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #155e75, #06b6d4)"
-                ></div>
-                <span class="theme-label">Aqua</span>
+              <button class="theme-swatch" data-theme="aqua" data-category="dark" title="Aqua">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#155e75,#06b6d4)"></span>
+                <span class="swatch-label">Aqua</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="black"
-                data-category="dark"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #000000, #27272a)"
-                ></div>
-                <span class="theme-label">Black</span>
+              <button class="theme-swatch" data-theme="black" data-category="dark" title="Black">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#000,#7c3aed)"></span>
+                <span class="swatch-label">Black</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="luxury"
-                data-category="dark"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #09090b, #3f3f46)"
-                ></div>
-                <span class="theme-label">Luxury</span>
+              <button class="theme-swatch" data-theme="luxury" data-category="dark" title="Luxury">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#09090b,#e0aa3e)"></span>
+                <span class="swatch-label">Luxury</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="dracula"
-                data-category="dark"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #282a36, #6272a4)"
-                ></div>
-                <span class="theme-label">Dracula</span>
+              <button class="theme-swatch" data-theme="dracula" data-category="dark" title="Dracula">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#282a36,#bd93f9)"></span>
+                <span class="swatch-label">Dracula</span>
               </button>
-
               <!-- Colorful Themes -->
-              <button
-                class="theme-option"
-                data-theme="valentine"
-                data-category="colorful"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #fff1f2, #fda4af)"
-                ></div>
-                <span class="theme-label">Valentine</span>
+              <button class="theme-swatch" data-theme="valentine" data-category="colorful" title="Valentine">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#fff1f2,#e96d85)"></span>
+                <span class="swatch-label">Valentine</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="garden"
-                data-category="colorful"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #f9fafb, #d1d5db)"
-                ></div>
-                <span class="theme-label">Garden</span>
+              <button class="theme-swatch" data-theme="garden" data-category="colorful" title="Garden">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#ecfdf5,#5c7f67)"></span>
+                <span class="swatch-label">Garden</span>
               </button>
-              <button
-                class="theme-option"
-                data-theme="fantasy"
-                data-category="colorful"
-              >
-                <div
-                  class="theme-preview"
-                  style="background: linear-gradient(135deg, #4f2284, #883ae2)"
-                ></div>
-                <span class="theme-label">Fantasy</span>
+              <button class="theme-swatch" data-theme="fantasy" data-category="colorful" title="Fantasy">
+                <span class="swatch-preview" style="background:linear-gradient(135deg,#4f2284,#e2883a)"></span>
+                <span class="swatch-label">Fantasy</span>
               </button>
             </div>
-          </div>
+          </section>
 
-          <div class="quick-links-section">
-            <div class="section-header">
-              <h2>Quick Links</h2>
-              <button class="add-quick-link" aria-label="Add new quick link">
+          <!-- Quick Links in Sidebar -->
+          <section class="sidebar-section sidebar-links">
+            <div class="section-label">
+              <i class="fas fa-bolt"></i>
+              <span>Quick Links</span>
+              <button class="add-link-btn icon-btn" id="add-quick-link-sidebar" aria-label="Add link" title="Add link">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
-            <div class="quick-links-list">
-              <!-- Quick links will be dynamically added here -->
+            <div class="sidebar-links-list" id="sidebar-links-list">
+              <!-- populated by JS -->
             </div>
-          </div>
+          </section>
 
+          <!-- Sidebar Footer -->
           <div class="sidebar-footer">
-            <button class="settings-btn" id="settings-btn">
+            <button class="sidebar-footer-btn" id="settings-btn">
               <i class="fas fa-cog"></i>
               <span>Settings</span>
             </button>
           </div>
-        </div>
-      </div>
 
-      <main class="main-content">
-        <div class="top-bar">
-          <button
-            id="sidebar-toggle"
-            class="sidebar-toggle"
-            aria-label="Toggle Sidebar"
-          >
+        </div>
+      </aside>
+
+      <!-- ═══ MAIN CONTENT ═══ -->
+      <main class="main-content" id="main-content">
+
+        <!-- Top Bar -->
+        <header class="top-bar">
+          <button class="icon-btn topbar-btn" id="sidebar-toggle" aria-label="Toggle sidebar" title="Menu">
             <i class="fas fa-bars"></i>
           </button>
 
-          <div class="clock-weather-container">
-            <div id="clock" class="clock">00:00</div>
-            <div id="date" class="date">Loading...</div>
-            <div id="weather" class="weather">
-              <span id="temperature">--°</span>
+          <div class="top-center">
+            <div class="clock-block">
+              <div id="clock" class="clock">00:00</div>
+              <div id="date" class="date-text">Loading...</div>
+            </div>
+            <div class="weather-block" id="weather">
               <i class="fas fa-cloud"></i>
+              <span id="temperature">--°</span>
             </div>
           </div>
 
-          <button
-            id="theme-toggle"
-            class="theme-toggle"
-            aria-label="Toggle Theme"
-          >
+          <button class="icon-btn topbar-btn" id="theme-toggle" aria-label="Cycle themes" title="Change theme">
             <i class="fas fa-palette"></i>
           </button>
-        </div>
+        </header>
 
-        <div class="hero-section">
-          <div class="greeting-container">
+        <!-- Hero -->
+        <section class="hero-section">
+          <div class="hero-content">
             <h1 id="greeting" class="greeting">Hello, Friend</h1>
-            <p id="motivation" class="motivation">
-              What are we accomplishing today?
-            </p>
+            <p id="motivation" class="motivation">What are we accomplishing today?</p>
           </div>
-        </div>
+        </section>
 
-        <div class="search-container">
-          <div class="search-box glass-effect">
+        <!-- Search -->
+        <section class="search-section">
+          <div class="search-card">
             <div class="search-engine-selector">
-              <button
-                id="search-engine-button"
-                class="search-engine-button"
-                aria-label="Select search engine"
-              >
+              <button id="search-engine-btn" class="engine-toggle" aria-label="Select engine">
                 <i id="search-engine-icon" class="fab fa-google"></i>
+                <i class="fas fa-chevron-down engine-chevron"></i>
               </button>
-              <div id="search-engine-dropdown" class="search-engine-dropdown">
-                <button class="search-engine-option" data-engine="google">
-                  <i class="fab fa-google"></i>
+              <div id="search-engine-dropdown" class="engine-dropdown">
+                <button class="engine-option" data-engine="google">
+                  <span class="engine-icon-wrap google"><i class="fab fa-google"></i></span>
                   <span>Google</span>
                 </button>
-                <button class="search-engine-option" data-engine="bing">
-                  <i class="fab fa-microsoft"></i>
+                <button class="engine-option" data-engine="bing">
+                  <span class="engine-icon-wrap bing"><i class="fab fa-microsoft"></i></span>
                   <span>Bing</span>
                 </button>
-                <button class="search-engine-option" data-engine="duckduckgo">
-                  <i class="fab fa-duckduckgo"></i>
+                <button class="engine-option" data-engine="duckduckgo">
+                  <span class="engine-icon-wrap ddg"><i class="fas fa-shield-alt"></i></span>
                   <span>DuckDuckGo</span>
                 </button>
               </div>
             </div>
-            <form id="search-form">
-              <input
-                type="text"
-                id="search-input"
-                class="search-input"
-                placeholder="Search or ask AI..."
-                aria-label="Search Input"
-              />
+
+            <div class="search-divider"></div>
+
+            <form id="search-form" class="search-form-inner">
+              <input type="text" id="search-input" class="search-input" placeholder="Search or ask AI…" autocomplete="off" aria-label="Search"/>
               <div class="search-actions">
-                <button class="action-btn" id="search-btn" title="Search web">
+                <button type="submit" class="search-action-btn" id="search-btn" title="Search">
                   <i class="fas fa-search"></i>
                 </button>
-                <button class="action-btn" id="attach-btn" title="Attach file">
+                <button type="button" class="search-action-btn" id="attach-btn" title="Attach">
                   <i class="fas fa-paperclip"></i>
                 </button>
-                <button
-                  class="action-btn send-btn"
-                  id="send-btn"
-                  title="Send message"
-                >
+                <button type="button" class="search-action-btn accent-btn" id="send-btn" title="Ask AI">
                   <i class="fas fa-paper-plane"></i>
                 </button>
-                <button
-                  class="action-btn voice-btn"
-                  id="voice-btn"
-                  title="Voice input"
-                >
+                <button type="button" class="search-action-btn" id="voice-btn" title="Voice">
                   <i class="fas fa-microphone"></i>
                 </button>
               </div>
             </form>
           </div>
-          <div id="chat-container" class="chat-container glass-effect">
-            <div class="welcome-message">
-              <i class="fas fa-robot bounce-animation"></i>
-              <h3>Hello! How can I help you today?</h3>
-              <p>Ask me anything - I'm here to assist!</p>
+
+          <!-- Chat Container -->
+          <div id="chat-container" class="chat-container">
+            <div class="chat-welcome">
+              <div class="chat-welcome-icon">
+                <i class="fas fa-robot"></i>
+              </div>
+              <p class="chat-welcome-title">Hello! How can I help you today?</p>
+              <p class="chat-welcome-sub">Ask me anything — I'm here to assist!</p>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="quick-access-grid">
-          <h2 class="section-title">Quick Access</h2>
-          <div id="quick-links-grid" class="links-grid">
-            <!-- Quick links will be dynamically added here as cards -->
+        <!-- Quick Access Grid -->
+        <section class="quick-access-section">
+          <div class="section-heading">
+            <h2 class="section-title">Quick Access</h2>
+            <button class="add-link-chip" id="add-quick-link-main" aria-label="Add link">
+              <i class="fas fa-plus"></i>
+              <span>Add</span>
+            </button>
           </div>
-        </div>
-      </main>
-    </div>
+          <div id="quick-links-grid" class="links-grid">
+            <!-- populated by JS -->
+          </div>
+        </section>
 
-    <div
-      id="add-link-modal"
-      class="modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-      aria-hidden="true"
-    >
-      <div class="modal-content glass-effect">
-        <div class="modal-header">
+      </main>
+    </div><!-- /app-container -->
+
+    <!-- ═══ ADD LINK MODAL ═══ -->
+    <div id="add-link-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal-box">
+        <div class="modal-head">
           <h2 id="modal-title" class="modal-title">Add Quick Link</h2>
-          <button
-            class="close-btn modal-close"
-            id="close-link-modal"
-            aria-label="Close add link dialog"
-          >
+          <button class="icon-btn modal-close" id="close-link-modal" aria-label="Close">
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <form id="add-link-form" class="modal-form">
-          <div class="form-group">
+        <form id="add-link-form" class="modal-body">
+          <div class="field-group">
             <label for="link-name">Name</label>
-            <input
-              type="text"
-              id="link-name"
-              class="glass-effect-input"
-              placeholder="e.g., GitHub"
-              required
-            />
+            <input type="text" id="link-name" class="field-input" placeholder="e.g. GitHub" required />
           </div>
-          <div class="form-group">
+          <div class="field-group">
             <label for="link-url">URL</label>
-            <input
-              type="url"
-              id="link-url"
-              class="glass-effect-input"
-              placeholder="https://example.com"
-              required
-            />
+            <input type="url" id="link-url" class="field-input" placeholder="https://example.com" required />
           </div>
-          <div class="form-group">
+          <div class="field-group">
             <label for="icon-select">Icon</label>
-            <div class="icon-selector-wrapper">
-              <select
-                id="icon-select"
-                class="glass-effect-input"
-                aria-label="Select icon for quick link"
-              >
-                <option value="fas fa-link">General Link</option>
-                <option value="fas fa-globe">Website</option>
-                <option value="fab fa-github">GitHub</option>
-                <option value="fab fa-youtube">YouTube</option>
-                <option value="fas fa-envelope">Email</option>
-                <option value="fas fa-code">Code</option>
-                <option value="fas fa-book">Documentation</option>
-                <option value="fas fa-cloud">Cloud</option>
-                <option value="fab fa-twitter">Twitter</option>
-                <option value="fab fa-linkedin">LinkedIn</option>
-                <option value="fab fa-instagram">Instagram</option>
-                <option value="fas fa-shopping-cart">Shopping</option>
-                <option value="fas fa-music">Music</option>
-                <option value="fas fa-video">Videos</option>
-              </select>
-              <div
-                id="icon-preview"
-                class="icon-preview glass-effect-input"
-                aria-label="Selected icon preview"
-              >
+            <div class="icon-select-row">
+              <div id="icon-preview" class="icon-preview-box">
                 <i class="fas fa-link"></i>
               </div>
+              <select id="icon-select" class="field-input icon-select">
+                <option value="fas fa-link">General Link</option>
+                <option value="fas fa-globe">Website</option>
+                <option value="fas fa-star">Favorite</option>
+                <option value="fas fa-folder">Folder</option>
+                <option value="fab fa-github">GitHub</option>
+                <option value="fab fa-gitlab">GitLab</option>
+                <option value="fab fa-google">Google</option>
+                <option value="fab fa-youtube">YouTube</option>
+                <option value="fab fa-twitter">Twitter</option>
+                <option value="fab fa-facebook">Facebook</option>
+                <option value="fab fa-instagram">Instagram</option>
+                <option value="fab fa-linkedin">LinkedIn</option>
+                <option value="fab fa-slack">Slack</option>
+                <option value="fab fa-figma">Figma</option>
+                <option value="fas fa-robot">AI / Bot</option>
+                <option value="fas fa-envelope">Email</option>
+                <option value="fas fa-calendar">Calendar</option>
+                <option value="fas fa-book">Docs</option>
+                <option value="fas fa-code">Code</option>
+                <option value="fas fa-cloud">Cloud</option>
+                <option value="fas fa-shopping-cart">Shopping</option>
+                <option value="fas fa-music">Music</option>
+                <option value="fas fa-video">Video</option>
+                <option value="fas fa-image">Photos</option>
+                <option value="fas fa-chart-bar">Analytics</option>
+                <option value="fas fa-gamepad">Games</option>
+                <option value="fas fa-gem">Gemini</option>
+              </select>
             </div>
           </div>
-          <div class="form-group">
-            <label for="link-color">Color (Optional)</label>
-            <input
-              type="color"
-              id="link-color"
-              class="color-input"
-              value="#5cffe3"
-            />
+          <div class="field-group">
+            <label for="link-color">Accent Color</label>
+            <div class="color-row">
+              <input type="color" id="link-color" class="color-picker" value="#c9a96e" />
+              <span class="color-hint">Choose a color for this link's icon</span>
+            </div>
           </div>
-          <div class="modal-buttons">
-            <button type="button" id="cancel-link-btn" class="secondary-button">
-              Cancel
-            </button>
-            <button type="submit" id="save-link-btn" class="primary-button">
-              Add Link
-            </button>
+          <div class="modal-actions">
+            <button type="button" id="cancel-link-btn" class="btn btn-ghost">Cancel</button>
+            <button type="submit" id="save-link-btn" class="btn btn-primary">Add Link</button>
           </div>
         </form>
       </div>
     </div>
 
-    <div
-      id="settings-modal"
-      class="modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-title"
-      aria-hidden="true"
-    >
-      <div class="modal-content glass-effect">
-        <div class="modal-header">
+    <!-- ═══ SETTINGS MODAL ═══ -->
+    <div id="settings-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal-box">
+        <div class="modal-head">
           <h2 id="settings-title" class="modal-title">Settings</h2>
-          <button
-            class="close-btn modal-close"
-            id="close-settings-modal"
-            aria-label="Close settings dialog"
-          >
+          <button class="icon-btn modal-close" id="close-settings-modal" aria-label="Close">
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <div class="settings-container">
-          <div class="settings-section">
-            <h3>Appearance</h3>
-            <div class="setting-item">
-              <label for="custom-bg-upload">Custom Background</label>
-              <input
-                type="file"
-                id="custom-bg-upload"
-                accept="image/*"
-                class="visually-hidden"
-              />
-              <button id="custom-bg-btn" class="secondary-button">
-                Choose Image
-              </button>
-              <button
-                id="reset-bg-btn"
-                class="small-button danger-button"
-                aria-label="Reset background"
-              >
-                Reset
-              </button>
+        <div class="modal-body settings-body">
+          <div class="settings-group">
+            <div class="settings-group-label">Appearance</div>
+            <div class="settings-row">
+              <label>Custom Background</label>
+              <div class="settings-row-controls">
+                <input type="file" id="custom-bg-upload" accept="image/*" class="visually-hidden" />
+                <button id="custom-bg-btn" class="btn btn-ghost btn-sm">Choose Image</button>
+                <button id="reset-bg-btn" class="btn btn-danger btn-sm">Reset</button>
+              </div>
             </div>
-            <div class="setting-item">
+            <div class="settings-row">
               <label for="blur-amount">Background Blur</label>
-              <input type="range" id="blur-amount" min="0" max="20" value="5" />
-              <span id="blur-value">5px</span>
+              <div class="settings-row-controls range-row">
+                <input type="range" id="blur-amount" min="0" max="20" value="5" />
+                <span id="blur-value" class="range-val">5px</span>
+              </div>
             </div>
           </div>
-          <div class="settings-section">
-            <h3>Customization</h3>
-            <div class="setting-item">
+          <div class="settings-group">
+            <div class="settings-group-label">Personalization</div>
+            <div class="settings-row">
               <label for="user-name">Your Name</label>
-              <input
-                type="text"
-                id="user-name"
-                class="glass-effect-input"
-                placeholder="Enter your name"
-              />
+              <input type="text" id="user-name" class="field-input field-sm" placeholder="Enter your name" />
             </div>
-            <div class="setting-item">
-              <label for="weather-location">Weather Location</label>
-              <input
-                type="text"
-                id="weather-location"
-                class="glass-effect-input"
-                placeholder="City name or ZIP code"
-              />
+            <div class="settings-row">
+              <label for="weather-location">Weather City</label>
+              <input type="text" id="weather-location" class="field-input field-sm" placeholder="City or ZIP" />
             </div>
           </div>
         </div>
-        <div class="modal-buttons">
-          <button
-            id="reset-settings-btn"
-            class="danger-button"
-            aria-label="Reset all settings"
-          >
-            Reset All Settings
-          </button>
-          <button
-            id="save-settings-btn"
-            class="primary-button"
-            aria-label="Save settings"
-          >
-            Save Settings
-          </button>
+        <div class="modal-actions modal-footer-actions">
+          <button id="reset-settings-btn" class="btn btn-danger">Reset All</button>
+          <button id="save-settings-btn" class="btn btn-primary">Save</button>
         </div>
       </div>
     </div>
 
-    <style>
-      .visually-hidden {
-        position: absolute !important;
-        height: 1px;
-        width: 1px;
-        overflow: hidden;
-        clip: rect(1px, 1px, 1px, 1px);
-        white-space: nowrap; /* Prevent line breaks */
-      }
-
-      .pulse-animation {
-        animation: pulse 2s infinite;
-      }
-
-      .bounce-animation {
-        animation: bounce 2s infinite;
-      }
-
-      @keyframes pulse {
-        0% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.6;
-        }
-        100% {
-          opacity: 1;
-        }
-      }
-
-      @keyframes bounce {
-        0%,
-        20%,
-        50%,
-        80%,
-        100% {
-          transform: translateY(0);
-        }
-        40% {
-          transform: translateY(-10px);
-        }
-        60% {
-          transform: translateY(-5px);
-        }
-      }
-    </style>
-
-    <script src="scripts.js"></script>
+    <script src="/scripts.js"></script>
   </body>
 </html>

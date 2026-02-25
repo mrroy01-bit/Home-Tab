@@ -1,1004 +1,596 @@
-import { geminiService } from './services/geminiService.js';
+// ═══════════════════════════════════════════════════════
+//  Nova Dashboard — scripts_new.js
+//  Fixes: sidebar toggle, quick link icons, full UI/UX
+// ═══════════════════════════════════════════════════════
 
-const AppState = {
-  todos: [],
+const App = {
   quickLinks: [],
   settings: {
-      theme: 'light',
-      customBackground: null,
-      searchEngine: 'google',
-      taskSort: 'created',
-      currentTaskPriority: 'medium',
-      currentTaskCategory: 'general',
-      userName: '',
-      weatherLocation: '',
-      bgBlur: '5'
+    theme: "light",
+    searchEngine: "google",
+    userName: "",
+    weatherLocation: "",
+    bgBlur: "5",
+    customBackground: null,
   },
-  // Simplified search engine configuration
   searchEngines: {
-      google: { name: 'Google', icon: 'fab fa-google', url: 'https://google.com/search', queryParam: 'q' },
-      bing: { name: 'Bing', icon: 'fab fa-microsoft', url: 'https://www.bing.com/search', queryParam: 'q' },
-      duckduckgo: { name: 'DuckDuckGo', icon: 'fab fa-duckduckgo', url: 'https://duckduckgo.com/', queryParam: 'q' }
+    google:     { name: "Google",     icon: "fab fa-google",    url: "https://google.com/search",    q: "q" },
+    bing:       { name: "Bing",       icon: "fab fa-microsoft", url: "https://www.bing.com/search",  q: "q" },
+    duckduckgo: { name: "DuckDuckGo", icon: "fas fa-shield-alt",url: "https://duckduckgo.com/",      q: "q" },
   },
-  // Available icons for quick links modal
-  quickLinkIcons: [
-      { value: 'fas fa-link', text: 'General Link' }, { value: 'fas fa-globe', text: 'Website' },
-      { value: 'fas fa-star', text: 'Favorite' }, { value: 'fas fa-folder', text: 'Folder' },
-      { value: 'fab fa-github', text: 'GitHub' }, { value: 'fab fa-gitlab', text: 'GitLab' },
-      { value: 'fab fa-google', text: 'Google' }, { value: 'fab fa-youtube', text: 'YouTube' },
-      { value: 'fab fa-twitter', text: 'Twitter / X' }, { value: 'fab fa-facebook', text: 'Facebook' },
-      { value: 'fab fa-instagram', text: 'Instagram' }, { value: 'fab fa-linkedin', text: 'LinkedIn' },
-      { value: 'fab fa-slack', text: 'Slack' }, { value: 'fab fa-figma', text: 'Figma' },
-      { value: 'fab fa-codepen', text: 'CodePen' }, { value: 'fas fa-envelope', text: 'Email' },
-      { value: 'fas fa-calendar', text: 'Calendar' }, { value: 'fas fa-book', text: 'Docs / Read' },
-      { value: 'fas fa-code', text: 'Code / Dev' }, { value: 'fas fa-cloud', text: 'Cloud / Drive' },
-      { value: 'fas fa-shopping-cart', text: 'Shopping' }, { value: 'fas fa-music', text: 'Music' },
-      { value: 'fas fa-video', text: 'Video / Stream' }, { value: 'fas fa-image', text: 'Photos / Images' },
-      { value: 'fas fa-file-alt', text: 'Documents' }, { value: 'fas fa-chart-bar', text: 'Analytics' },
-      { value: 'fas fa-cog', text: 'Settings' }, { value: 'fas fa-briefcase', text: 'Work' },
-      { value: 'fas fa-graduation-cap', text: 'School' }, { value: 'fas fa-gamepad', text: 'Games' }
+  defaultLinks: [
+    { name: "ChatGPT",  url: "https://chat.openai.com",      icon: "fas fa-robot",    color: "#10a37f" },
+    { name: "GitHub",   url: "https://github.com",            icon: "fab fa-github",   color: "#6e40c9" },
+    { name: "Gmail",    url: "https://mail.google.com",       icon: "fas fa-envelope", color: "#ea4335" },
+    { name: "YouTube",  url: "https://youtube.com",           icon: "fab fa-youtube",  color: "#ff0000" },
+    { name: "Gemini",   url: "https://gemini.google.com",     icon: "fas fa-gem",      color: "#8e24aa" },
   ],
-  // Default quick links if none are loaded
-  defaultQuickLinks: [
-      { name: 'ChatGPT', url: 'https://chat.openai.com', icon: 'fas fa-robot', color: '#10a37f' },
-      { name: 'GitHub', url: 'https://github.com', icon: 'fab fa-github', color: '#333333' },
-      { name: 'Gmail', url: 'https://mail.google.com', icon: 'fas fa-envelope', color: '#ea4335' },
-      { name: 'YouTube', url: 'https://youtube.com', icon: 'fab fa-youtube', color: '#ff0000' },
-      { name: 'Gemini', url: 'https://gemini.google.com', icon: 'fas fa-gem', color: '#8e24aa' }
-  ],
-  domRefs: {}, 
-  draggedLinkElement: null,
-  chatHistory: [],
+  dragged: null,
+  refs: {},
 };
 
-// --- DOM Element Caching ---
-function cacheDomReferences() {
-  AppState.domRefs = {
-      // Main Layout
-      htmlElement: document.documentElement,
-      bodyElement: document.body,
-      sidebarElement: document.getElementById('sidebar'),
-      sidebarToggle: document.getElementById('sidebar-toggle'),
-      closeSidebarBtn: document.getElementById('close-sidebar'),
-      
-      // Header & Theme
-      clock: document.getElementById('clock'),
-      date: document.getElementById('date'),
-      weatherDisplay: document.getElementById('temperature'),
-      themeColorMeta: document.querySelector('meta[name="theme-color"]'),
-      greeting: document.getElementById('greeting'),
-      motivation: document.getElementById('motivation'),
-      themeToggleBtn: document.getElementById('theme-toggle'),
-      themeOptions: document.querySelectorAll('.theme-option'),
-      
-      // Search
-      searchEngineButton: document.getElementById('search-engine-button'),
-      searchEngineIcon: document.getElementById('search-engine-icon'),
-      searchEngineDropdown: document.getElementById('search-engine-dropdown'),
-      searchEngineOptions: document.querySelectorAll('.search-engine-option'),
-      searchForm: document.getElementById('search-form'),
-      searchInput: document.getElementById('search-input'),
-      searchBtn: document.getElementById('search-btn'),
-      sendBtn: document.getElementById('send-btn'),
-      attachBtn: document.getElementById('attach-btn'),
-      voiceBtn: document.getElementById('voice-btn'),
-      chatContainer: document.getElementById('chat-container'),
+// ─── DOM Cache ────────────────────────────────────────────
+function cacheRefs() {
+  App.refs = {
+    html:               document.documentElement,
+    body:               document.body,
+    appContainer:       document.getElementById("app-container"),
+    sidebar:            document.getElementById("sidebar"),
+    sidebarOverlay:     document.getElementById("sidebar-overlay"),
+    sidebarToggle:      document.getElementById("sidebar-toggle"),
+    closeSidebar:       document.getElementById("close-sidebar"),
 
-      // Quick Links
-      quickLinksGrid: document.getElementById('quick-links-grid'),
-      quickLinksList: document.querySelector('.quick-links-list'),
-      addLinkButtons: document.querySelectorAll('.add-quick-link'),
-      addLinkModal: document.getElementById('add-link-modal'),
-      addLinkForm: document.getElementById('add-link-form'),
-      closeLinkModalBtn: document.getElementById('close-link-modal'),
-      cancelLinkBtn: document.getElementById('cancel-link-btn'),
-      saveLinkBtn: document.getElementById('save-link-btn'),
-      linkNameInput: document.getElementById('link-name'),
-      linkUrlInput: document.getElementById('link-url'),
-      iconSelect: document.getElementById('icon-select'),
-      iconPreview: document.getElementById('icon-preview'),
-      linkColorInput: document.getElementById('link-color'),
-      modalTitle: document.getElementById('modal-title'),
+    clock:              document.getElementById("clock"),
+    date:               document.getElementById("date"),
+    weatherEl:          document.getElementById("weather"),
+    tempEl:             document.getElementById("temperature"),
+    greeting:           document.getElementById("greeting"),
+    motivation:         document.getElementById("motivation"),
+    themeToggle:        document.getElementById("theme-toggle"),
+    themeOptionsGrid:   document.getElementById("theme-options-grid"),
 
-      // Settings
-      settingsBtn: document.getElementById('settings-btn'),
-      settingsModal: document.getElementById('settings-modal'),
-      closeSettingsModalBtn: document.getElementById('close-settings-modal'),
-      customBgUpload: document.getElementById('custom-bg-upload'),
-      customBgBtn: document.getElementById('custom-bg-btn'),
-      resetBgBtn: document.getElementById('reset-bg-btn'),
-      blurAmount: document.getElementById('blur-amount'),
-      blurValue: document.getElementById('blur-value'),
-      userNameInput: document.getElementById('user-name'),
-      weatherLocationInput: document.getElementById('weather-location'),
-      resetSettingsBtn: document.getElementById('reset-settings-btn'),
-      saveSettingsBtn: document.getElementById('save-settings-btn'),
+    searchEngineBtn:    document.getElementById("search-engine-btn"),
+    searchEngineIcon:   document.getElementById("search-engine-icon"),
+    searchEngineDropdown: document.getElementById("search-engine-dropdown"),
+    searchForm:         document.getElementById("search-form"),
+    searchInput:        document.getElementById("search-input"),
+    searchBtn:          document.getElementById("search-btn"),
+    sendBtn:            document.getElementById("send-btn"),
+    chatContainer:      document.getElementById("chat-container"),
+
+    quickLinksGrid:     document.getElementById("quick-links-grid"),
+    sidebarLinksList:   document.getElementById("sidebar-links-list"),
+
+    addLinkModal:       document.getElementById("add-link-modal"),
+    addLinkForm:        document.getElementById("add-link-form"),
+    closeLinkModal:     document.getElementById("close-link-modal"),
+    cancelLinkBtn:      document.getElementById("cancel-link-btn"),
+    modalTitle:         document.getElementById("modal-title"),
+    saveLinkBtn:        document.getElementById("save-link-btn"),
+    linkName:           document.getElementById("link-name"),
+    linkUrl:            document.getElementById("link-url"),
+    iconSelect:         document.getElementById("icon-select"),
+    iconPreview:        document.getElementById("icon-preview"),
+    linkColor:          document.getElementById("link-color"),
+
+    settingsBtn:        document.getElementById("settings-btn"),
+    settingsModal:      document.getElementById("settings-modal"),
+    closeSettingsModal: document.getElementById("close-settings-modal"),
+    customBgUpload:     document.getElementById("custom-bg-upload"),
+    customBgBtn:        document.getElementById("custom-bg-btn"),
+    resetBgBtn:         document.getElementById("reset-bg-btn"),
+    blurAmount:         document.getElementById("blur-amount"),
+    blurValue:          document.getElementById("blur-value"),
+    userNameInput:      document.getElementById("user-name"),
+    weatherLocationInput: document.getElementById("weather-location"),
+    resetSettingsBtn:   document.getElementById("reset-settings-btn"),
+    saveSettingsBtn:    document.getElementById("save-settings-btn"),
   };
-  
-  // Log any missing DOM references to help with debugging
-  for (const [key, value] of Object.entries(AppState.domRefs)) {
-    if (!value && key !== 'draggedLinkElement') {
-      console.warn(`Missing DOM reference: ${key}`);
-    }
-  }
 }
 
-// --- Data Persistence (LocalStorage) ---
-
-/** Loads data (links, settings) from localStorage */
+// ─── Storage ──────────────────────────────────────────────
 function loadData() {
   try {
-      const storedLinks = localStorage.getItem('app_quickLinks');
-      AppState.quickLinks = storedLinks ? JSON.parse(storedLinks) : [...AppState.defaultQuickLinks]; // Use default if none stored
-  } catch (e) {
-      console.error("Error loading quick links:", e);
-      AppState.quickLinks = [...AppState.defaultQuickLinks];
-  }
+    const links = localStorage.getItem("nova_links");
+    App.quickLinks = links ? JSON.parse(links) : [...App.defaultLinks];
+  } catch { App.quickLinks = [...App.defaultLinks]; }
 
   try {
-      const storedSettings = localStorage.getItem('app_settings');
-      if (storedSettings) {
-          const parsedSettings = JSON.parse(storedSettings);
-          // Merge stored settings with defaults to handle missing keys
-          AppState.settings = { ...AppState.settings, ...parsedSettings };
-      }
-      // Ensure essential settings have defaults if missing entirely
-      AppState.settings.theme = AppState.settings.theme || 'ocean';
-      AppState.settings.searchEngine = AppState.settings.searchEngine || 'google';
-
-  } catch (e) {
-      console.error("Error loading settings:", e);
-      // Keep default settings if loading fails
-  }
-  console.log("Data loaded:", { quickLinks: AppState.quickLinks, settings: AppState.settings });
+    const saved = localStorage.getItem("nova_settings");
+    if (saved) App.settings = { ...App.settings, ...JSON.parse(saved) };
+  } catch {}
 }
 
-/** Saves the entire AppState (or specific parts) to localStorage */
-function saveData(part = 'all') {
+function save(key = "all") {
   try {
-      if (part === 'all' || part === 'quickLinks') {
-          localStorage.setItem('app_quickLinks', JSON.stringify(AppState.quickLinks));
-      }
-      if (part === 'all' || part === 'settings') {
-          localStorage.setItem('app_settings', JSON.stringify(AppState.settings));
-      }
-  } catch (e) {
-      console.error("Error saving data to localStorage:", e);
-  }
+    if (key === "all" || key === "links")
+      localStorage.setItem("nova_links", JSON.stringify(App.quickLinks));
+    if (key === "all" || key === "settings")
+      localStorage.setItem("nova_settings", JSON.stringify(App.settings));
+  } catch (e) { console.warn("Save failed:", e); }
 }
 
-// --- Theme Management ---
-
-/** Sets up theme functionality */
-function setupTheme() {
-    // Try to get preferred color scheme
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // If no theme is set, use system preference
-    if (!AppState.settings.theme) {
-        AppState.settings.theme = prefersDark ? 'dark' : 'light';
-    }
-    
-    // Set up theme change listener
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if (!AppState.settings.theme) {
-            applyTheme(e.matches ? 'dark' : 'light');
-        }
-    });
-    
-    // Set up the theme switcher UI
-    setupThemeSwitcher();
-}
-
-/** Sets up the theme switcher functionality */
-function setupThemeSwitcher() {
-    const { themeOptions, themeToggleBtn } = AppState.domRefs;
-    
-    // Apply the saved theme on load
-    applyTheme(AppState.settings.theme);
-    
-    // Set up theme option buttons
-    if (themeOptions) {
-        themeOptions.forEach(button => {
-            button.addEventListener('click', () => {
-                const themeName = button.getAttribute('data-theme');
-                if (themeName) {
-                    applyTheme(themeName);
-                }
-            });
-        });
-    }
-    
-    // Set up theme toggle button
-    if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', () => {
-            const themes = ['light', 'dark', 'synthwave', 'cupcake', 'emerald', 'cyberpunk'];
-            const currentThemeIndex = themes.indexOf(AppState.settings.theme);
-            const nextThemeIndex = (currentThemeIndex + 1) % themes.length;
-            applyTheme(themes[nextThemeIndex]);
-        });
-    }
-
-    // Set up theme category filters
-    const themeCategories = document.querySelectorAll('.theme-category');
-    if (themeCategories) {
-        themeCategories.forEach(category => {
-            category.addEventListener('click', () => {
-                // Remove active class from all categories
-                themeCategories.forEach(cat => cat.classList.remove('active'));
-                
-                // Add active class to clicked category
-                category.classList.add('active');
-                
-                // Get category value
-                const categoryValue = category.getAttribute('data-category');
-                
-                // Filter theme options
-                document.querySelectorAll('.theme-option').forEach(option => {
-                    const optionCategory = option.getAttribute('data-category');
-                    
-                    if (categoryValue === 'all' || categoryValue === optionCategory) {
-                        option.style.display = 'flex';
-                    } else {
-                        option.style.display = 'none';
-                    }
-                });
-            });
-        });
-    }
-}
-
-/** Updates the UI to match the current theme */
-function applyTheme(themeName) {
-    const { htmlElement, themeColorMeta } = AppState.domRefs;
-    
-    // Set the theme attribute on html
-    htmlElement.setAttribute('data-theme', themeName);
-    
-    // Update theme meta tag color
-    let themeColor = '#570df8'; // Default light theme accent color
-    
-    // Set the correct theme color for system UI based on theme
-    switch(themeName) {
-        // Light themes
-        case 'light': themeColor = '#570df8'; break;
-        case 'cupcake': themeColor = '#65c3c8'; break;
-        case 'bumblebee': themeColor = '#e0a82e'; break; 
-        case 'emerald': themeColor = '#66cc8a'; break;
-        case 'corporate': themeColor = '#4b6bfb'; break;
-        case 'retro': themeColor = '#ef9995'; break;
-        case 'lofi': themeColor = '#818cf8'; break;
-        case 'pastel': themeColor = '#a5b4fc'; break;
-
-        // Dark themes
-        case 'dark': themeColor = '#661AE6'; break;
-        case 'synthwave': themeColor = '#e779c1'; break;
-        case 'cyberpunk': themeColor = '#ffff00'; break;
-        case 'halloween': themeColor = '#f97316'; break;
-        case 'forest': themeColor = '#2BAE66'; break;
-        case 'aqua': themeColor = '#06b6d4'; break;
-        case 'black': themeColor = '#6d28d9'; break;
-        case 'luxury': themeColor = '#e0aa3e'; break;
-        case 'dracula': themeColor = '#bd93f9'; break;
-
-        // Colorful themes
-        case 'valentine': themeColor = '#e96d85'; break;
-        case 'garden': themeColor = '#5c7f67'; break;
-        case 'fantasy': themeColor = '#883AE2'; break;
-    }
-    
-    if (themeColorMeta) {
-        themeColorMeta.content = themeColor;
-    }
-    
-    // Update active class on theme options
-    document.querySelectorAll('.theme-option').forEach(button => {
-        if (button.getAttribute('data-theme') === themeName) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
-    });
-    
-    // Save theme in settings
-    AppState.settings.theme = themeName;
-    saveData('settings');
-}
-
-// --- Time & Date Management ---
-
-/** Updates the clock and date displays */
-function updateTimeAndDate() {
-  const { clock, date } = AppState.domRefs;
-  
-  if (!clock || !date) return;
-  
-  const now = new Date();
-  
-  // Update clock display
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  clock.textContent = `${hours}:${minutes}`;
-  
-  // Update date display
-  const options = { weekday: 'long', month: 'long', day: 'numeric' };
-  date.textContent = now.toLocaleDateString(undefined, options);
-  
-  // Update greeting based on time of day
-  updateGreeting(now.getHours());
-}
-
-/** Updates the greeting message based on time of day */
-function updateGreeting(hour) {
-  const { greeting } = AppState.domRefs;
-  
-  if (!greeting) return;
-  
-  let greetingText = 'Hello';
-  
-  if (hour < 12) {
-    greetingText = 'Good morning';
-  } else if (hour < 18) {
-    greetingText = 'Good afternoon';
-  } else {
-    greetingText = 'Good evening';
-  }
-  
-  // Add user name if available
-  const userName = AppState.settings.userName;
-  if (userName) {
-    greetingText += `, ${userName}`;
-  }
-  
-  greeting.textContent = greetingText;
-}
-
-// --- Weather Management ---
-
-/** Fetches weather data for the configured location */
-async function fetchWeather() {
-  const { weatherDisplay } = AppState.domRefs;
-  
-  if (!weatherDisplay) return;
-  
-  try {
-    // Load API key from storage
-    let apiKey;
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-      const result = await new Promise(resolve => {
-        chrome.storage.sync.get(['weatherApiKey'], resolve);
-      });
-      apiKey = result.weatherApiKey;
-    } else {
-      apiKey = localStorage.getItem('weatherApiKey');
-    }
-    
-    if (!apiKey) {
-      weatherDisplay.textContent = '--°';
-      console.warn('Weather API key not configured');
-      return;
-    }
-    
-    const location = AppState.settings.weatherLocation || 'auto:ip';
-    
-    // Handle default case with browser geolocation
-    if (location === 'auto:ip' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const { latitude, longitude } = position.coords;
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${apiKey}`);
-        const data = await response.json();
-        updateWeatherDisplay(data);
-      }, (error) => {
-        console.error('Geolocation error:', error);
-        weatherDisplay.textContent = '--°';
-      });
-    } else {
-      // Use specified location
-      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&units=metric&appid=${apiKey}`);
-      const data = await response.json();
-      updateWeatherDisplay(data);
-    }
-  } catch (error) {
-    console.error('Weather fetch error:', error);
-    weatherDisplay.textContent = '--°';
-  }
-}
-
-/** Updates the weather display with fetched data */
-function updateWeatherDisplay(data) {
-  const { weatherDisplay } = AppState.domRefs;
-  
-  if (!weatherDisplay || !data || !data.main) return;
-  
-  const temp = Math.round(data.main.temp);
-  weatherDisplay.textContent = `${temp}°C`;
-  
-  // Update weather icon
-  const weatherIcon = document.querySelector('#weather i');
-  if (weatherIcon) {
-    const weatherCode = data.weather[0].id;
-    let iconClass = 'fas fa-cloud'; // Default icon
-    
-    // Map weather codes to Font Awesome icons
-    if (weatherCode >= 200 && weatherCode < 300) {
-      iconClass = 'fas fa-bolt'; // Thunderstorm
-    } else if (weatherCode >= 300 && weatherCode < 400) {
-      iconClass = 'fas fa-cloud-rain'; // Drizzle
-    } else if (weatherCode >= 500 && weatherCode < 600) {
-      iconClass = 'fas fa-cloud-showers-heavy'; // Rain
-    } else if (weatherCode >= 600 && weatherCode < 700) {
-      iconClass = 'fas fa-snowflake'; // Snow
-    } else if (weatherCode >= 700 && weatherCode < 800) {
-      iconClass = 'fas fa-smog'; // Atmosphere (fog, etc.)
-    } else if (weatherCode === 800) {
-      iconClass = 'fas fa-sun'; // Clear sky
-    } else if (weatherCode > 800) {
-      iconClass = 'fas fa-cloud-sun'; // Clouds
-    }
-    
-    // Remove all icon classes and add the correct one
-    weatherIcon.className = '';
-    weatherIcon.classList.add(...iconClass.split(' '));
-  }
-}
-
-// --- Search Functionality ---
-
-/** Sets up the search functionality */
-function setupSearch() {
-  const { 
-    searchEngineButton, searchEngineDropdown, searchEngineOptions, 
-    searchEngineIcon, searchForm, searchInput, searchBtn, sendBtn 
-  } = AppState.domRefs;
-  
-  // Update search engine display
-  updateSearchEngineDisplay();
-  
-  // Toggle search engine dropdown
-  if (searchEngineButton && searchEngineDropdown) {
-    searchEngineButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      searchEngineDropdown.classList.toggle('active');
-      e.stopPropagation();
-    });
-    
-    // Close dropdown when clicking elsewhere
-    document.addEventListener('click', () => {
-      searchEngineDropdown.classList.remove('active');
-    });
-  }
-  
-  // Search engine selection
-  if (searchEngineOptions) {
-    searchEngineOptions.forEach(option => {
-      option.addEventListener('click', (e) => {
-        const engine = option.getAttribute('data-engine');
-        if (engine) {
-          AppState.settings.searchEngine = engine;
-          saveData('settings');
-          updateSearchEngineDisplay();
-          searchEngineDropdown.classList.remove('active');
-        }
-      });
-    });
-  }
-  
-  // Handle search form submission
-  if (searchForm) {
-    searchForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      performSearch();
-    });
-  }
-  
-  // Search button click
-  if (searchBtn) {
-    searchBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      performSearch();
-    });
-  }
-  
-  // Send button for AI query
-  if (sendBtn) {
-    sendBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      handleAIQuery();
-    });
-  }
-}
-
-/** Updates the search engine icon and tooltip */
-function updateSearchEngineDisplay() {
-  const { searchEngineIcon } = AppState.domRefs;
-  
-  if (!searchEngineIcon) return;
-  
-  const engine = AppState.settings.searchEngine;
-  const engineData = AppState.searchEngines[engine];
-  
-  if (engineData) {
-    searchEngineIcon.className = engineData.icon;
-    searchEngineIcon.setAttribute('title', engineData.name);
-    
-    // Also update active state in dropdown
-    document.querySelectorAll('.search-engine-option').forEach(option => {
-      if (option.getAttribute('data-engine') === engine) {
-        option.classList.add('active');
-      } else {
-        option.classList.remove('active');
-      }
-    });
-  }
-}
-
-/** Performs a web search using the selected search engine */
-function performSearch() {
-  const { searchInput } = AppState.domRefs;
-  
-  if (!searchInput || !searchInput.value.trim()) return;
-  
-  const engine = AppState.settings.searchEngine;
-  const engineData = AppState.searchEngines[engine];
-  
-  if (engineData) {
-    const searchTerm = encodeURIComponent(searchInput.value.trim());
-    const searchUrl = `${engineData.url}?${engineData.queryParam}=${searchTerm}`;
-    window.open(searchUrl, '_blank');
-  }
-}
-
-/** Handles AI query submission */
-async function handleAIQuery() {
-  const { searchInput, chatContainer } = AppState.domRefs;
-  
-  if (!searchInput || !chatContainer || !searchInput.value.trim()) return;
-  
-  const query = searchInput.value.trim();
-  searchInput.value = '';
-  
-  // Remove welcome message if it exists
-  const welcomeMessage = chatContainer.querySelector('.welcome-message');
-  if (welcomeMessage) {
-    welcomeMessage.remove();
-  }
-  
-  // Create user message element
-  const userMessage = document.createElement('div');
-  userMessage.className = 'chat-message user-message';
-  userMessage.innerHTML = `
-    <div class="message-avatar">
-      <i class="fas fa-user"></i>
-    </div>
-    <div class="message-content">
-      <p>${escapeHtml(query)}</p>
-    </div>
-  `;
-  
-  chatContainer.appendChild(userMessage);
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-  
-  // Create AI response placeholder with loading state
-  const aiMessage = document.createElement('div');
-  aiMessage.className = 'chat-message ai-message';
-  aiMessage.innerHTML = `
-    <div class="message-avatar">
-      <i class="fas fa-robot"></i>
-    </div>
-    <div class="message-content">
-      <div class="typing-indicator">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
-  `;
-  
-  chatContainer.appendChild(aiMessage);
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-  
-  try {
-    // Get response from Gemini
-    const response = await geminiService.generateResponse(query);
-    
-    // Update AI message with response
-    const messageContent = aiMessage.querySelector('.message-content');
-    messageContent.innerHTML = `<p>${formatAIResponse(response)}</p>`;
-    
-    // Save to chat history
-    AppState.chatHistory.push(
-      { role: 'user', content: query, timestamp: Date.now() },
-      { role: 'ai', content: response, timestamp: Date.now() }
-    );
-    saveChatHistory();
-    
-  } catch (error) {
-    console.error('AI Error:', error);
-    
-    // Show error message
-    const messageContent = aiMessage.querySelector('.message-content');
-    const errorMsg = error.message.includes('API key') 
-      ? 'API key not configured. Please set your Gemini API key in extension settings.'
-      : `Error: ${error.message}`;
-    
-    messageContent.innerHTML = `
-      <div class="error-message">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p>${escapeHtml(errorMsg)}</p>
-        ${error.message.includes('API key') ? '<button class="open-settings-btn" onclick="openSettings()">Open Settings</button>' : ''}
-      </div>
-    `;
-  }
-  
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function formatAIResponse(text) {
-  // Basic markdown-like formatting
-  let formatted = escapeHtml(text);
-  
-  // Bold text
-  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  
-  // Code blocks
-  formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
-  
-  // Line breaks
-  formatted = formatted.replace(/\n/g, '<br>');
-  
-  return formatted;
-}
-
-function saveChatHistory() {
-  try {
-    // Keep only last 50 messages
-    if (AppState.chatHistory.length > 50) {
-      AppState.chatHistory = AppState.chatHistory.slice(-50);
-    }
-    localStorage.setItem('chatHistory', JSON.stringify(AppState.chatHistory));
-  } catch (e) {
-    console.error('Error saving chat history:', e);
-  }
-}
-
-function loadChatHistory() {
-  try {
-    const stored = localStorage.getItem('chatHistory');
-    if (stored) {
-      AppState.chatHistory = JSON.parse(stored);
-      renderChatHistory();
-    }
-  } catch (e) {
-    console.error('Error loading chat history:', e);
-    AppState.chatHistory = [];
-  }
-}
-
-function renderChatHistory() {
-  const { chatContainer } = AppState.domRefs;
-  if (!chatContainer || AppState.chatHistory.length === 0) return;
-  
-  // Remove welcome message
-  const welcomeMessage = chatContainer.querySelector('.welcome-message');
-  if (welcomeMessage) {
-    welcomeMessage.remove();
-  }
-  
-  // Render last 10 messages
-  const recentMessages = AppState.chatHistory.slice(-10);
-  recentMessages.forEach(msg => {
-    const messageEl = document.createElement('div');
-    messageEl.className = `chat-message ${msg.role}-message`;
-    
-    const icon = msg.role === 'user' ? 'fa-user' : 'fa-robot';
-    const content = msg.role === 'ai' ? formatAIResponse(msg.content) : escapeHtml(msg.content);
-    
-    messageEl.innerHTML = `
-      <div class="message-avatar">
-        <i class="fas ${icon}"></i>
-      </div>
-      <div class="message-content">
-        <p>${content}</p>
-      </div>
-    `;
-    
-    chatContainer.appendChild(messageEl);
-  });
-  
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-window.openSettings = function() {
-  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.openOptionsPage) {
-    chrome.runtime.openOptionsPage();
-  } else {
-    window.open('options.html', '_blank');
-  }
-};
-
-// --- Quick Links Management ---
-
-/** Renders the quick links grid */
-function renderQuickLinks() {
-    const { quickLinksGrid } = AppState.domRefs;
-    
-    if (!quickLinksGrid) return;
-    
-    // Clear existing links
-    quickLinksGrid.innerHTML = '';
-    
-    // Create and append quick link cards
-    AppState.quickLinks.forEach((link) => {
-        const card = document.createElement('div');
-        card.className = 'quick-link-card glass-effect';
-        card.draggable = true;
-        
-        // Set card style with custom color if provided
-        if (link.color) {
-            card.style.setProperty('--card-accent-color', link.color);
-        }
-        
-        card.innerHTML = `
-            <div class="quick-link-card-icon">
-                <i class="${link.icon}"></i>
-            </div>
-            <div class="quick-link-card-title">${link.name}</div>
-        `;
-        
-        // Add click handler to open link
-        card.addEventListener('click', () => {
-            window.open(link.url, '_blank');
-        });
-        
-        // Add context menu for edit/delete
-        card.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            // TODO: Implement context menu for edit/delete functionality
-        });
-        
-        quickLinksGrid.appendChild(card);
-    });
-}
-
-/** Opens the add/edit link modal */
-function openAddLinkModal(e, linkToEdit = null) {
-    if (e) e.preventDefault();
-    
-    const { 
-        addLinkModal, modalTitle, linkNameInput, linkUrlInput, 
-        iconSelect, iconPreview, saveLinkBtn, linkColorInput, addLinkForm
-    } = AppState.domRefs;
-    
-    // Reset form
-    addLinkForm.reset();
-    
-    if (linkToEdit) {
-        // Edit mode
-        modalTitle.textContent = 'Edit Quick Link';
-        saveLinkBtn.textContent = 'Save Changes';
-        
-        // Fill form with existing data
-        linkNameInput.value = linkToEdit.name;
-        linkUrlInput.value = linkToEdit.url;
-        
-        // Select icon
-        const iconOption = Array.from(iconSelect.options).find(option => option.value === linkToEdit.icon);
-        if (iconOption) {
-            iconOption.selected = true;
-        }
-        
-        // Update preview
-        iconPreview.innerHTML = `<i class="${linkToEdit.icon}"></i>`;
-        
-        // Set color if it exists
-        if (linkToEdit.color) {
-            linkColorInput.value = linkToEdit.color;
-        }
-        
-        // Store the index of the link being edited
-        addLinkForm.dataset.editIndex = AppState.quickLinks.indexOf(linkToEdit);
-    } else {
-        // Add mode
-        modalTitle.textContent = 'Add Quick Link';
-        saveLinkBtn.textContent = 'Add Link';
-        
-        // Reset preview
-        iconPreview.innerHTML = `<i class="${iconSelect.value}"></i>`;
-        
-        // Remove edit index
-        delete addLinkForm.dataset.editIndex;
-    }
-    
-    // Show the modal
-    addLinkModal.classList.add('active');
-}
-
-/** Closes the add/edit link modal */
-function closeAddLinkModal() {
-    const { addLinkModal, addLinkForm } = AppState.domRefs;
-    addLinkModal.classList.remove('active');
-    addLinkForm.reset();
-}
-
-/** Saves the quick link from the modal form */
-function saveQuickLink() {
-    const { linkNameInput, linkUrlInput, iconSelect, linkColorInput, addLinkForm } = AppState.domRefs;
-    
-    // Get form values
-    const name = linkNameInput.value.trim();
-    let url = linkUrlInput.value.trim();
-    const icon = iconSelect.value;
-    const color = linkColorInput.value;
-    
-    // Validate URL format
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
-    }
-    
-    // Create link object
-    const linkData = { name, url, icon, color };
-    
-    // Check if editing or adding
-    const editIndex = addLinkForm.dataset.editIndex;
-    
-    if (editIndex !== undefined) {
-        // Edit existing link
-        AppState.quickLinks[editIndex] = linkData;
-    } else {
-        // Add new link
-        AppState.quickLinks.push(linkData);
-    }
-    
-    // Save and render updates
-    saveData('quickLinks');
-    renderQuickLinks();
-    closeAddLinkModal();
-}
-
-/** Sets up quick links functionality */
-function setupQuickLinks() {
-    const { 
-        quickLinksGrid, quickLinksList, addLinkButtons, 
-        addLinkModal, addLinkForm, closeLinkModalBtn, cancelLinkBtn,
-        linkNameInput, linkUrlInput, iconSelect, iconPreview, linkColorInput
-    } = AppState.domRefs;
-    
-    // Render initial quick links
-    renderQuickLinks();
-    
-    // Set up modal for adding/editing links
-    if (addLinkButtons) {
-        addLinkButtons.forEach(button => {
-            button.addEventListener('click', openAddLinkModal);
-        });
-    }
-    
-    if (closeLinkModalBtn) {
-        closeLinkModalBtn.addEventListener('click', closeAddLinkModal);
-    }
-    
-    if (cancelLinkBtn) {
-        cancelLinkBtn.addEventListener('click', closeAddLinkModal);
-    }
-    
-    // Update icon preview when selection changes
-    if (iconSelect && iconPreview) {
-        iconSelect.addEventListener('change', () => {
-            const iconClass = iconSelect.value;
-            iconPreview.innerHTML = `<i class="${iconClass}"></i>`;
-        });
-    }
-    
-    // Handle form submission
-    if (addLinkForm) {
-        addLinkForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            saveQuickLink();
-        });
-    }
-
-    // Make links draggable in grid
-    if (quickLinksGrid) {
-        quickLinksGrid.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('quick-link-card')) {
-                AppState.draggedLinkElement = e.target;
-                e.target.classList.add('dragging');
-            }
-        });
-
-        quickLinksGrid.addEventListener('dragend', (e) => {
-            if (e.target.classList.contains('quick-link-card')) {
-                e.target.classList.remove('dragging');
-                AppState.draggedLinkElement = null;
-            }
-        });
-
-        quickLinksGrid.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            if (AppState.draggedLinkElement) {
-                const draggingCard = AppState.draggedLinkElement;
-                const currentCard = e.target.closest('.quick-link-card');
-                
-                if (currentCard && draggingCard !== currentCard) {
-                    const draggingIndex = Array.from(quickLinksGrid.children).indexOf(draggingCard);
-                    const currentIndex = Array.from(quickLinksGrid.children).indexOf(currentCard);
-                    
-                    if (draggingIndex > currentIndex) {
-                        currentCard.parentNode.insertBefore(draggingCard, currentCard);
-                    } else {
-                        currentCard.parentNode.insertBefore(draggingCard, currentCard.nextSibling);
-                    }
-                    
-                    // Update AppState.quickLinks array
-                    const links = Array.from(quickLinksGrid.children).map(card => {
-                        const index = AppState.quickLinks.findIndex(link => 
-                            link.name === card.querySelector('.quick-link-card-title').textContent);
-                        return AppState.quickLinks[index];
-                    });
-                    AppState.quickLinks = links;
-                    saveData('quickLinks');
-                }
-            }
-        });
-    }
-}
-
-/** Sets up sidebar functionality */
+// ─── SIDEBAR FIX ─────────────────────────────────────────
 function setupSidebar() {
-    const { sidebarElement, sidebarToggle, closeSidebarBtn } = AppState.domRefs;
-    
-    // Toggle sidebar when clicking the toggle button
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', () => {
-            sidebarElement.classList.toggle('active');
-            document.querySelector('.app-container').classList.toggle('sidebar-visible');
-        });
-    }
-    
-    // Close sidebar when clicking the close button
-    if (closeSidebarBtn) {
-        closeSidebarBtn.addEventListener('click', () => {
-            sidebarElement.classList.remove('active');
-            document.querySelector('.app-container').classList.remove('sidebar-visible');
-        });
-    }
-    
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768 &&
-            sidebarElement.classList.contains('active') &&
-            !sidebarElement.contains(e.target) &&
-            !sidebarToggle.contains(e.target)) {
-            sidebarElement.classList.remove('active');
-            document.querySelector('.app-container').classList.remove('sidebar-visible');
-        }
-    });
+  const { sidebar, sidebarOverlay, sidebarToggle, closeSidebar, appContainer } = App.refs;
+
+  function openSidebar() {
+    sidebar.classList.add("open");
+    sidebarOverlay.classList.add("visible");
+    appContainer.classList.add("sidebar-open");
+    sidebarToggle.setAttribute("aria-expanded", "true");
+  }
+
+  function closeSidebarFn() {
+    sidebar.classList.remove("open");
+    sidebarOverlay.classList.remove("visible");
+    appContainer.classList.remove("sidebar-open");
+    sidebarToggle.setAttribute("aria-expanded", "false");
+  }
+
+  // ← THIS was the core bug: the old code used .active but CSS used .open
+  sidebarToggle?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    sidebar.classList.contains("open") ? closeSidebarFn() : openSidebar();
+  });
+
+  closeSidebar?.addEventListener("click", closeSidebarFn);
+
+  sidebarOverlay?.addEventListener("click", closeSidebarFn);
+
+  // Close on outside click (desktop too now)
+  document.addEventListener("click", (e) => {
+    if (
+      sidebar.classList.contains("open") &&
+      !sidebar.contains(e.target) &&
+      !sidebarToggle.contains(e.target)
+    ) closeSidebarFn();
+  });
+
+  // ESC to close
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSidebarFn();
+  });
 }
 
-// Initialize functions on document load
-document.addEventListener('DOMContentLoaded', () => {
-    // Cache DOM references first
-    cacheDomReferences();
-    
-    // Load data from storage
-    loadData();
-    
-    // Setup all functionality
-    setupTheme();
-    setupSearch();
-    setupQuickLinks();
-    setupSidebar(); // Initialize sidebar functionality
-    
-    // Start timers
-    setInterval(updateTimeAndDate, 1000);
-    
-    // Update initial displays
-    updateTimeAndDate();
-    fetchWeather();
+// ─── THEME ────────────────────────────────────────────────
+const THEME_CYCLE = ["light", "dark", "synthwave", "dracula", "bumblebee", "cyberpunk", "emerald"];
+
+function applyTheme(name) {
+  App.refs.html.setAttribute("data-theme", name);
+  App.settings.theme = name;
+  save("settings");
+
+  // Update active swatch
+  document.querySelectorAll(".theme-swatch").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.theme === name);
+  });
+}
+
+function setupTheme() {
+  applyTheme(App.settings.theme || "light");
+
+  // Swatch clicks
+  document.querySelectorAll(".theme-swatch").forEach(btn => {
+    btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+  });
+
+  // Filter tabs
+  document.querySelectorAll(".tab-btn").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      const cat = tab.dataset.category;
+      document.querySelectorAll(".theme-swatch").forEach(s => {
+        s.style.display = (cat === "all" || s.dataset.category === cat) ? "" : "none";
+      });
+    });
+  });
+
+  // Cycle button
+  App.refs.themeToggle?.addEventListener("click", () => {
+    const idx = THEME_CYCLE.indexOf(App.settings.theme);
+    applyTheme(THEME_CYCLE[(idx + 1) % THEME_CYCLE.length]);
+  });
+}
+
+// ─── CLOCK & DATE ─────────────────────────────────────────
+function updateClock() {
+  const now  = new Date();
+  const hh   = now.getHours().toString().padStart(2, "0");
+  const mm   = now.getMinutes().toString().padStart(2, "0");
+  if (App.refs.clock) App.refs.clock.textContent = `${hh}:${mm}`;
+  if (App.refs.date)  App.refs.date.textContent  = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+  // Greeting
+  const hour = now.getHours();
+  let g = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  if (App.settings.userName) g += `, ${App.settings.userName}`;
+  if (App.refs.greeting) App.refs.greeting.textContent = g;
+}
+
+// ─── WEATHER ──────────────────────────────────────────────
+async function fetchWeather() {
+  const apiKey = localStorage.getItem("weatherApiKey");
+  if (!apiKey || !App.refs.tempEl) return;
+
+  try {
+    const loc = App.settings.weatherLocation || "auto:ip";
+    const url = loc === "auto:ip"
+      ? null
+      : `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(loc)}&units=metric&appid=${apiKey}`;
+
+    if (!url && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const r = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&units=metric&appid=${apiKey}`);
+        renderWeather(await r.json());
+      });
+    } else if (url) {
+      const r = await fetch(url);
+      renderWeather(await r.json());
+    }
+  } catch {}
+}
+
+function renderWeather(data) {
+  if (!data?.main) return;
+  if (App.refs.tempEl) App.refs.tempEl.textContent = `${Math.round(data.main.temp)}°C`;
+  const wi = App.refs.weatherEl?.querySelector("i");
+  if (!wi) return;
+  const id = data.weather?.[0]?.id ?? 800;
+  wi.className = id >= 200 && id < 300 ? "fas fa-bolt"
+    : id >= 300 && id < 400 ? "fas fa-cloud-rain"
+    : id >= 500 && id < 600 ? "fas fa-cloud-showers-heavy"
+    : id >= 600 && id < 700 ? "fas fa-snowflake"
+    : id >= 700 && id < 800 ? "fas fa-smog"
+    : id === 800            ? "fas fa-sun"
+    : "fas fa-cloud-sun";
+}
+
+// ─── SEARCH ───────────────────────────────────────────────
+function setupSearch() {
+  const { searchEngineBtn, searchEngineDropdown, searchForm, searchBtn, sendBtn, searchInput } = App.refs;
+
+  updateEngineDisplay();
+
+  // Toggle dropdown
+  searchEngineBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    searchEngineDropdown.classList.toggle("open");
+  });
+  document.addEventListener("click", () => searchEngineDropdown?.classList.remove("open"));
+
+  // Engine options
+  document.querySelectorAll(".engine-option").forEach(opt => {
+    opt.addEventListener("click", () => {
+      App.settings.searchEngine = opt.dataset.engine;
+      save("settings");
+      updateEngineDisplay();
+      searchEngineDropdown.classList.remove("open");
+    });
+  });
+
+  // Search submit
+  searchForm?.addEventListener("submit", (e) => { e.preventDefault(); performSearch(); });
+  searchBtn?.addEventListener("click", (e) => { e.preventDefault(); performSearch(); });
+  sendBtn?.addEventListener("click", (e) => { e.preventDefault(); handleAI(); });
+}
+
+function updateEngineDisplay() {
+  const eng = App.searchEngines[App.settings.searchEngine];
+  if (!eng || !App.refs.searchEngineIcon) return;
+  App.refs.searchEngineIcon.className = eng.icon;
+  document.querySelectorAll(".engine-option").forEach(o => {
+    o.classList.toggle("active", o.dataset.engine === App.settings.searchEngine);
+  });
+}
+
+function performSearch() {
+  const q = App.refs.searchInput?.value.trim();
+  if (!q) return;
+  const eng = App.searchEngines[App.settings.searchEngine];
+  window.open(`${eng.url}?${eng.q}=${encodeURIComponent(q)}`, "_blank");
+}
+
+async function handleAI() {
+  const q = App.refs.searchInput?.value.trim();
+  if (!q || !App.refs.chatContainer) return;
+  App.refs.searchInput.value = "";
+
+  // Remove welcome
+  App.refs.chatContainer.querySelector(".chat-welcome")?.remove();
+
+  appendMessage("user", escapeHtml(q));
+  const aiEl = appendMessage("ai", `<div class="typing-dots"><span></span><span></span><span></span></div>`);
+
+  try {
+    // Replace with your actual AI call
+    await new Promise(r => setTimeout(r, 800));
+    aiEl.querySelector(".message-content").innerHTML = `<p>I'd need a Gemini API key to respond. You can configure it in Settings.</p>`;
+  } catch (err) {
+    aiEl.querySelector(".message-content").innerHTML = `<p class="error-text"><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(err.message)}</p>`;
+  }
+
+  App.refs.chatContainer.scrollTop = App.refs.chatContainer.scrollHeight;
+}
+
+function appendMessage(role, html) {
+  const div = document.createElement("div");
+  div.className = `chat-msg ${role}-msg`;
+  const icon = role === "user" ? "fas fa-user" : "fas fa-robot";
+  div.innerHTML = `
+    <div class="msg-avatar"><i class="${icon}"></i></div>
+    <div class="message-content">${html}</div>
+  `;
+  App.refs.chatContainer.appendChild(div);
+  App.refs.chatContainer.scrollTop = App.refs.chatContainer.scrollHeight;
+  return div;
+}
+
+// ─── QUICK LINKS — FIXED ICON RENDERING ──────────────────
+function renderQuickLinks() {
+  const grid = App.refs.quickLinksGrid;
+  const list = App.refs.sidebarLinksList;
+  if (!grid) return;
+
+  grid.innerHTML = "";
+  if (list) list.innerHTML = "";
+
+  App.quickLinks.forEach((link, idx) => {
+    // ── GRID CARD ──
+    const card = document.createElement("a");
+    card.className = "ql-card";
+    card.href = link.url;
+    card.target = "_blank";
+    card.rel = "noopener noreferrer";
+    card.draggable = true;
+    card.dataset.idx = idx;
+
+    // Icon with custom color
+    const iconColor = link.color || "var(--accent)";
+    card.innerHTML = `
+      <div class="ql-card-icon" style="color:${iconColor};background:${iconColor}1a">
+        <i class="${link.icon || 'fas fa-link'}"></i>
+      </div>
+      <span class="ql-card-name">${escapeHtml(link.name)}</span>
+      <div class="ql-card-actions">
+        <button class="ql-action edit-btn" data-idx="${idx}" title="Edit" aria-label="Edit">
+          <i class="fas fa-pen"></i>
+        </button>
+        <button class="ql-action del-btn" data-idx="${idx}" title="Delete" aria-label="Delete">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+
+    // Prevent link navigation when clicking actions
+    card.querySelectorAll(".ql-action").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const i = +btn.dataset.idx;
+        if (btn.classList.contains("del-btn")) deleteLink(i);
+        else openModal(App.quickLinks[i], i);
+      });
+    });
+
+    // Drag events
+    card.addEventListener("dragstart", (e) => {
+      App.dragged = idx;
+      card.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    card.addEventListener("dragend", () => card.classList.remove("dragging"));
+    card.addEventListener("dragover", (e) => { e.preventDefault(); card.classList.add("drag-over"); });
+    card.addEventListener("dragleave", () => card.classList.remove("drag-over"));
+    card.addEventListener("drop", (e) => {
+      e.preventDefault();
+      card.classList.remove("drag-over");
+      if (App.dragged !== null && App.dragged !== idx) {
+        const arr = [...App.quickLinks];
+        const [moved] = arr.splice(App.dragged, 1);
+        arr.splice(idx, 0, moved);
+        App.quickLinks = arr;
+        save("links");
+        renderQuickLinks();
+      }
+    });
+
+    grid.appendChild(card);
+
+    // ── SIDEBAR ITEM ──
+    if (list) {
+      const item = document.createElement("a");
+      item.className = "sidebar-link-item";
+      item.href = link.url;
+      item.target = "_blank";
+      item.rel = "noopener noreferrer";
+      item.innerHTML = `
+        <span class="sli-icon" style="color:${iconColor}">
+          <i class="${link.icon || 'fas fa-link'}"></i>
+        </span>
+        <span class="sli-name">${escapeHtml(link.name)}</span>
+        <i class="fas fa-external-link-alt sli-ext"></i>
+      `;
+      list.appendChild(item);
+    }
+  });
+}
+
+function deleteLink(idx) {
+  if (!confirm(`Remove "${App.quickLinks[idx].name}"?`)) return;
+  App.quickLinks.splice(idx, 1);
+  save("links");
+  renderQuickLinks();
+}
+
+// ─── MODAL ────────────────────────────────────────────────
+function openModal(link = null, editIdx = null) {
+  const { addLinkModal, addLinkForm, modalTitle, saveLinkBtn, linkName, linkUrl, iconSelect, iconPreview, linkColor } = App.refs;
+
+  addLinkForm.reset();
+  delete addLinkForm.dataset.editIdx;
+
+  if (link !== null && editIdx !== null) {
+    modalTitle.textContent = "Edit Link";
+    saveLinkBtn.textContent = "Save Changes";
+    linkName.value = link.name;
+    linkUrl.value  = link.url;
+    const opt = [...iconSelect.options].find(o => o.value === link.icon);
+    if (opt) opt.selected = true;
+    if (link.color) linkColor.value = link.color;
+    iconPreview.innerHTML = `<i class="${link.icon || 'fas fa-link'}"></i>`;
+    iconPreview.style.color = link.color || "";
+    addLinkForm.dataset.editIdx = editIdx;
+  } else {
+    modalTitle.textContent = "Add Quick Link";
+    saveLinkBtn.textContent = "Add Link";
+    iconPreview.innerHTML = `<i class="fas fa-link"></i>`;
+  }
+
+  addLinkModal.classList.add("open");
+  addLinkModal.setAttribute("aria-hidden", "false");
+  linkName.focus();
+}
+
+function closeModal() {
+  App.refs.addLinkModal.classList.remove("open");
+  App.refs.addLinkModal.setAttribute("aria-hidden", "true");
+}
+
+function saveLink(e) {
+  e.preventDefault();
+  const { linkName, linkUrl, iconSelect, linkColor, addLinkForm } = App.refs;
+  let name = linkName.value.trim();
+  let url  = linkUrl.value.trim();
+  if (!name || !url) return;
+  if (!url.startsWith("http://") && !url.startsWith("https://")) url = "https://" + url;
+
+  const data = { name, url, icon: iconSelect.value, color: linkColor.value };
+  const editIdx = addLinkForm.dataset.editIdx;
+
+  if (editIdx !== undefined) {
+    App.quickLinks[+editIdx] = data;
+  } else {
+    App.quickLinks.push(data);
+  }
+  save("links");
+  renderQuickLinks();
+  closeModal();
+}
+
+function setupQuickLinks() {
+  renderQuickLinks();
+
+  // Open modal buttons
+  document.getElementById("add-quick-link-main")?.addEventListener("click", () => openModal());
+  document.getElementById("add-quick-link-sidebar")?.addEventListener("click", () => openModal());
+
+  // Modal close
+  App.refs.closeLinkModal?.addEventListener("click", closeModal);
+  App.refs.cancelLinkBtn?.addEventListener("click", closeModal);
+  App.refs.addLinkModal?.addEventListener("click", (e) => {
+    if (e.target === App.refs.addLinkModal) closeModal();
+  });
+
+  // Form submit
+  App.refs.addLinkForm?.addEventListener("submit", saveLink);
+
+  // Icon preview live update
+  App.refs.iconSelect?.addEventListener("change", () => {
+    App.refs.iconPreview.innerHTML = `<i class="${App.refs.iconSelect.value}"></i>`;
+    App.refs.iconPreview.style.color = App.refs.linkColor.value;
+  });
+  App.refs.linkColor?.addEventListener("input", () => {
+    App.refs.iconPreview.style.color = App.refs.linkColor.value;
+  });
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────
+function setupSettings() {
+  const { settingsBtn, settingsModal, closeSettingsModal, customBgBtn, customBgUpload, resetBgBtn, blurAmount, blurValue, userNameInput, weatherLocationInput, resetSettingsBtn, saveSettingsBtn } = App.refs;
+
+  // Pre-fill
+  if (userNameInput)       userNameInput.value       = App.settings.userName || "";
+  if (weatherLocationInput) weatherLocationInput.value = App.settings.weatherLocation || "";
+  if (blurAmount) {
+    blurAmount.value = App.settings.bgBlur || "5";
+    if (blurValue) blurValue.textContent = `${blurAmount.value}px`;
+  }
+
+  settingsBtn?.addEventListener("click",        () => { settingsModal.classList.add("open"); settingsModal.setAttribute("aria-hidden","false"); });
+  closeSettingsModal?.addEventListener("click", () => { settingsModal.classList.remove("open"); settingsModal.setAttribute("aria-hidden","true"); });
+  settingsModal?.addEventListener("click",      (e) => { if (e.target === settingsModal) settingsModal.classList.remove("open"); });
+
+  blurAmount?.addEventListener("input", () => {
+    if (blurValue) blurValue.textContent = `${blurAmount.value}px`;
+  });
+
+  customBgBtn?.addEventListener("click", () => customBgUpload.click());
+  customBgUpload?.addEventListener("change", () => {
+    const file = customBgUpload.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      App.settings.customBackground = ev.target.result;
+      applyBackground();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  resetBgBtn?.addEventListener("click", () => {
+    App.settings.customBackground = null;
+    applyBackground();
+  });
+
+  saveSettingsBtn?.addEventListener("click", () => {
+    App.settings.userName        = userNameInput?.value.trim() || "";
+    App.settings.weatherLocation = weatherLocationInput?.value.trim() || "";
+    App.settings.bgBlur          = blurAmount?.value || "5";
+    save("settings");
+    updateClock();
+    applyBackground();
+    settingsModal.classList.remove("open");
+  });
+
+  resetSettingsBtn?.addEventListener("click", () => {
+    if (!confirm("Reset all settings to defaults?")) return;
+    localStorage.removeItem("nova_links");
+    localStorage.removeItem("nova_settings");
+    location.reload();
+  });
+}
+
+function applyBackground() {
+  const { body } = App.refs;
+  const bg = App.settings.customBackground;
+  if (bg) {
+    body.style.setProperty("--bg-image", `url(${bg})`);
+    body.classList.add("custom-bg");
+  } else {
+    body.style.removeProperty("--bg-image");
+    body.classList.remove("custom-bg");
+  }
+}
+
+// ─── UTILS ───────────────────────────────────────────────
+function escapeHtml(str) {
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  cacheRefs();
+  loadData();
+  setupSidebar();
+  setupTheme();
+  setupSearch();
+  setupQuickLinks();
+  setupSettings();
+  applyBackground();
+  updateClock();
+  fetchWeather();
+  setInterval(updateClock, 1000);
 });
