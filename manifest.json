@@ -16,13 +16,9 @@
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
-  "permissions": [
-    "storage",
-    "geolocation"
-  ],
-  "host_permissions": [
-    "https://api.openweathermap.org/"
-  ],
+  "permissions": ["storage", "geolocation"],
+  "options_page": "options.html",
+  "host_permissions": ["https://api.openweathermap.org/"],
   "commands": {
     "_execute_action": {
       "suggested_key": {

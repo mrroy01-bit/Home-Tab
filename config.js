@@ -1,7 +1,7 @@
-// Load environment variables
+// Configuration - API keys are loaded from chrome.storage
 const config = {
-    geminiApiKey: process.env.GEMINI_API_KEY || '',
-    apiEndpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+  apiEndpoint:
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
 };
 
-export default config; 
+export default config;

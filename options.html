@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enhanced Home Tab - Settings</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 600px;
+        width: 100%;
+        padding: 40px;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .help-text {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        font-family: monospace;
+      }
+
+      input[type="text"]:focus,
+      input[type="password"]:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .input-wrapper {
+        position: relative;
+      }
+
+      .toggle-visibility {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        padding: 4px;
+        transition: color 0.2s;
+      }
+
+      .toggle-visibility:hover {
+        color: #667eea;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+      }
+
+      button {
+        flex: 1;
+        padding: 14px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .primary-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .primary-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .secondary-btn {
+        background: #f5f5f5;
+        color: #333;
+      }
+
+      .secondary-btn:hover {
+        background: #e0e0e0;
+      }
+
+      .danger-btn {
+        background: #ff4757;
+        color: white;
+      }
+
+      .danger-btn:hover {
+        background: #ff3838;
+      }
+
+      .status-message {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: none;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+      }
+
+      .status-message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: flex;
+      }
+
+      .status-message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: flex;
+      }
+
+      .privacy-notice {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 30px;
+        font-size: 13px;
+        color: #856404;
+      }
+
+      .privacy-notice i {
+        margin-right: 8px;
+      }
+
+      .key-links {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+      }
+
+      .key-links h3 {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 12px;
+      }
+
+      .link-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .key-link {
+        color: #667eea;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        transition: color 0.2s;
+      }
+
+      .key-link:hover {
+        color: #764ba2;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .status-message.success,
+      .status-message.error {
+        animation: fadeIn 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>
+        <i class="fas fa-cog"></i>
+        Extension Settings
+      </h1>
+      <p class="subtitle">
+        Configure your API keys for AI chat and weather features
+      </p>
+
+      <div id="status-message" class="status-message"></div>
+
+      <form id="settings-form">
+        <div class="form-group">
+          <label for="gemini-api-key">
+            <i class="fas fa-robot"></i> Gemini AI API Key
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="password"
+              id="gemini-api-key"
+              placeholder="Enter your Google Gemini API key"
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              class="toggle-visibility"
+              data-target="gemini-api-key"
+            >
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <p class="help-text">
+            <i class="fas fa-info-circle"></i>
+            Required for AI chat functionality
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="weather-api-key">
+            <i class="fas fa-cloud-sun"></i> OpenWeatherMap API Key
+          </label>
+          <div class="input-wrapper">
+            <input
+              type="password"
+              id="weather-api-key"
+              placeholder="Enter your OpenWeatherMap API key"
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              class="toggle-visibility"
+              data-target="weather-api-key"
+            >
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <p class="help-text">
+            <i class="fas fa-info-circle"></i>
+            Required for weather display
+          </p>
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="primary-btn">
+            <i class="fas fa-save"></i>
+            Save Settings
+          </button>
+          <button type="button" id="clear-btn" class="danger-btn">
+            <i class="fas fa-trash"></i>
+            Clear All
+          </button>
+        </div>
+      </form>
+
+      <div class="privacy-notice">
+        <i class="fas fa-shield-alt"></i>
+        <strong>Privacy Notice:</strong> Your API keys are stored securely in
+        your browser's sync storage and are never sent to third parties. They
+        are only used to communicate directly with Google Gemini and
+        OpenWeatherMap APIs.
+      </div>
+
+      <div class="key-links">
+        <h3>Get Your API Keys:</h3>
+        <div class="link-list">
+          <a
+            href="https://aistudio.google.com/app/apikey"
+            target="_blank"
+            class="key-link"
+          >
+            <i class="fas fa-external-link-alt"></i>
+            Get Gemini API Key (Free)
+          </a>
+          <a
+            href="https://openweathermap.org/api"
+            target="_blank"
+            class="key-link"
+          >
+            <i class="fas fa-external-link-alt"></i>
+            Get OpenWeatherMap API Key (Free)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script src="options.js"></script>
+  </body>
+</html>
